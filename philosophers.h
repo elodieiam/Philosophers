@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/13 22:04:57 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/14 16:17:52 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 typedef struct s_philo
 {
@@ -28,7 +29,8 @@ typedef struct s_philo
 	int				time_eat;
 	int				time_sleep;
 	int				number_meals;
-	int				status;	
+	int				status;
+	// bool			*stop;
 } t_philo;
 
 long long	ft_atoi(const char *str);

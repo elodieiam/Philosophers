@@ -1,6 +1,6 @@
 CC = cc 
 NAME = philo
-CFLAGS = -Wall -Wextra -Werror -pthread
+CFLAGS = -Wall -Wextra -Werror -pthread -g3
 
 SRC = check_args.c\
 	main.c
@@ -18,3 +18,8 @@ $(NAME): $(OBJ) philosophers.h
 
 clean :
 	rm -f $(OBJ)
+
+fclean: clean
+	rm -rf $(NAME)
+
+re:	fclean all
