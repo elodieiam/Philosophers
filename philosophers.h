@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/14 16:17:52 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/17 17:16:26 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <sys/time.h>
 
 typedef struct s_philo
 {
@@ -25,6 +26,7 @@ typedef struct s_philo
 	pthread_mutex_t	l_fork;
 	pthread_mutex_t r_fork;
 	int				pos;
+	int				nb_philo;
 	int				time_die;
 	int				time_eat;
 	int				time_sleep;

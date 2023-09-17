@@ -6,16 +6,28 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/14 16:17:57 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/17 17:30:20 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
+/*"substitut" de variable globale
+A chaque fois qu'on appelle cette fonction, on obtient l'adresse de la variable
+On peut donc accéder à la même variable partout pr voir sa valeur et/ou la modifier
+Les variables booléennes sont initialisées à 'faux' par défaut 
+Voir test2.c
+*/
 bool	*stop(void)
 {
 	static bool	stop;
 	return (&stop);
+}
+
+int	*f(void)
+{
+	static int var;
+	return (&var); //faire un mutex dessus pour protéger l'accès
 }
 
 void	free_mutex(char **av, pthread_mutex_t **forks)
@@ -37,23 +49,50 @@ int	init_variables(char **av, pthread_mutex_t **forks, t_philo **philos)
 		return (0);
 	if (!init_philos(av, philos, forks))
 	{
-		free_mutex(av, forks);
+		free_mutex(av, forks); //faut-il laisser pthread_join avant de free les mutex 
 		return (0);
 	}
 	return (1);
 }
 
+// void	pick_fork(t_philo *philo)
+// {
+	
+// }
+
+void	wait(t_philo *philo)
+{
+	struct timeval	tv;
+	long long		time_start;
+	long long		time_launch;
+
+	gettimeofday(&tv, NULL);
+	time_start = (tv.tv_sec * 1000000 + tv.tv_usec) / 1000; //pour passer de micro à milli seconde
+	time_launch = time_start + (150 * (philo->nb_philo - philo->pos));
+	while (time_start < time_launch)
+	{
+		//check_is_dead;
+		time_start = gettimeofday(&tv, NULL);
+		time_start = (tv.tv_sec * 1000000 + tv.tv_usec) / 1000;
+		usleep(500); // sinon la condition est vérifiée constamment, ça surcharge la capacité du CPU
+	} 
+}
+
 void	*routine(void *arg)
 {
-	t_philo *p;
+	t_philo *philo;
+	int		*indicator;
+	
 
-	p = arg;
-	if (check_creation == 1)
-	{
+	philo = arg;
+	indicator = NULL;
+	
+	printf("Thread created\n");
+	wait(philo);//usleep (n° du philo x un certain temps défini)
+	indicator = f();
+	if (*indicator == 1)
 		return (NULL);
-	}
-	printf("%d\n", p->time_die);
-	printf("Thread sarted %i\n", p->pos);
+	//pick_fork(philo);
 	//lancer les actions : recup fourchette, drop fourchettes, sleep, think
 	//print message 
 	return (NULL);
@@ -84,9 +123,11 @@ int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 {
 	int	nb;
 	int	i;
+	int	*indicator;
 
 	nb = ft_atoi(av[1]);
 	i = 0;
+	indicator = f();
 	*philos = malloc(sizeof(t_philo) * nb);
 	if (!*philos)
 		return (0);
@@ -104,6 +145,7 @@ int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 			(*philos)[i].r_fork = (*forks)[i - 1];
 		}
 		(*philos)[i].pos = (i + 1);
+		(*philos)[i].nb_philo = ft_atoi(av[1]);
 		(*philos)[i].time_die = ft_atoi(av[2]);
 		(*philos)[i].time_eat = ft_atoi(av[3]);
 		(*philos)[i].time_sleep = ft_atoi(av[4]); // = tab[i] == *(tab + i)
@@ -119,9 +161,18 @@ int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 	{
 		if (pthread_create(&(((*philos)[i].ID)), NULL, routine, (void *)&(*philos)[i]) != 0)
 		{
-			(*philos)[i].creation = 0;
-			free (philos);
+			*indicator = 1;
+			printf("Error : pthread_create issue.\n");
 			return (0);
+		}
+		i++;
+	}
+	i = 0;
+	while (i < nb)
+	{
+		if (pthread_join(((*philos)[i]).ID, NULL) != 0)
+		{
+			printf("Error : pthread_join issue.\n");
 		}
 		i++;
 	}
@@ -185,10 +236,7 @@ int main(int ac, char **av)
 
 		
    printf("%ld\n", philos[0].ID);
-   pthread_join(philos[0].ID, NULL);
    printf("%ld\n", philos[1].ID);
-   pthread_join(philos[1].ID, NULL);
    printf("%ld\n", philos[2].ID);
-   pthread_join(philos[2].ID, NULL);
 	return (0);
 	}
