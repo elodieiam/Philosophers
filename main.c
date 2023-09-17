@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/17 17:30:20 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/17 22:12:04 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,26 @@ int	init_variables(char **av, pthread_mutex_t **forks, t_philo **philos)
 	return (1);
 }
 
-// void	pick_fork(t_philo *philo)
-// {
-	
-// }
+void	pick_fork(t_philo *philo)
+{
+	if (philo->pos % 2 == 0)
+	{
+		pthread_mutex_lock(&(philo->r_fork));
+		pthread_mutex_lock(&(philo->l_fork));
+		printf("Philo %d is eating\n", philo->pos);
+		pthread_mutex_unlock(&(philo->r_fork));
+		pthread_mutex_unlock(&(philo->l_fork));
+		
+	}
+	else
+	{
+		pthread_mutex_lock((&philo->l_fork));
+		pthread_mutex_lock(&(philo->r_fork));
+		printf("Philo %d is eating\n", philo->pos);
+		pthread_mutex_unlock(&(philo->l_fork));
+		pthread_mutex_unlock(&(philo->r_fork));
+	}
+}
 
 void	wait(t_philo *philo)
 {
@@ -78,6 +94,11 @@ void	wait(t_philo *philo)
 	} 
 }
 
+void	think(t_philo *philo)
+{
+	printf("Philo %d is thinking.\n", philo->pos);
+}
+
 void	*routine(void *arg)
 {
 	t_philo *philo;
@@ -92,6 +113,15 @@ void	*routine(void *arg)
 	indicator = f();
 	if (*indicator == 1)
 		return (NULL);
+	if (philo->pos % 2 == 0)
+	{
+		pick_fork(philo);
+	}
+	else
+	{
+		think(philo);
+		pick_fork(philo);
+	}
 	//pick_fork(philo);
 	//lancer les actions : recup fourchette, drop fourchettes, sleep, think
 	//print message 
@@ -176,6 +206,7 @@ int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 		}
 		i++;
 	}
+	free_mutex(av, forks);
 	return (1);
 }
 
