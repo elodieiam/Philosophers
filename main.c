@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/18 11:33:19 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/18 18:36:11 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ bool	*stop(void)
 int	*f(void)
 {
 	static int var;
-	return (&var); //faire un mutex dessus pour protéger l'accès
+	return (&var); 
 }
 
 void	free_mutex(char **av, pthread_mutex_t **forks)
@@ -59,20 +59,24 @@ void	pick_fork(t_philo *philo)
 {
 	if (philo->pos % 2 == 0)
 	{
-		pthread_mutex_lock(&(philo->r_fork));
-		pthread_mutex_lock(&(philo->l_fork));
-		//printf("Philo %d is eating\n", philo->pos);
-		pthread_mutex_unlock(&(philo->r_fork));
-		pthread_mutex_unlock(&(philo->l_fork));
+		pthread_mutex_lock((philo->r_fork));
+		pthread_mutex_lock((philo->l_fork));
+		pthread_mutex_lock(philo->check);
+		printf("Philo %d is eating\n", philo->pos);
+		pthread_mutex_unlock((philo->r_fork));
+		pthread_mutex_unlock((philo->l_fork));
+		pthread_mutex_unlock(philo->check);
 		
 	}
 	else
 	{
-		pthread_mutex_lock((&philo->l_fork));
-		pthread_mutex_lock(&(philo->r_fork));
-		//printf("Philo %d is eating\n", philo->pos);
-		pthread_mutex_unlock(&(philo->l_fork));
-		pthread_mutex_unlock(&(philo->r_fork));
+		pthread_mutex_lock((philo->l_fork));
+		pthread_mutex_lock((philo->r_fork));
+		pthread_mutex_lock(philo->check);
+		printf("Philo %d is eating\n", philo->pos);
+		pthread_mutex_unlock((philo->l_fork));
+		pthread_mutex_unlock((philo->r_fork));
+		pthread_mutex_unlock(philo->check);
 	}
 }
 
@@ -96,44 +100,46 @@ void	wait(t_philo *philo)
 
 void	think(t_philo *philo)
 {
+	pthread_mutex_lock((philo->check));
 	printf("Philo %d is thinking.\n", philo->pos);
+	pthread_mutex_unlock((philo->check));
 }
 
 void	*routine(void *arg)
 {
 	t_philo *philo;
 	int		*indicator;
+	struct timeval tv;
 	
 
 	philo = arg;
 	indicator = NULL;
 	
-	//printf("Thread created\n");
 	wait(philo);
-	pthread_mutex_lock(&(philo->check));
+	gettimeofday(&tv, NULL);
+	//printf("Thread started at %ld and %ld\n", tv.tv_sec, tv.tv_usec);
+	pthread_mutex_lock((philo->check));
 	indicator = f();
 	if (*indicator == 1)
 	{
-		pthread_mutex_unlock(&(philo->check));
+		pthread_mutex_unlock((philo->check));
 		return (NULL);
 	}
-	pthread_mutex_unlock(&(philo->check));
+	pthread_mutex_unlock((philo->check));
 	if (philo->pos % 2 == 0)
 	{
 		pick_fork(philo);
 	}
 	else
 	{
-		//think(philo);
+		think(philo);
 		pick_fork(philo);
 	}
 	//pick_fork(philo);
-	//lancer les actions : recup fourchette, drop fourchettes, sleep, think
-	//print message 
 	return (NULL);
 }
 
-void	set_philos_vars(char **av, t_philo **philos, pthread_mutex_t **forks, pthread_mutex_t check)
+void	set_philos_vars(char **av, t_philo **philos, pthread_mutex_t **forks, pthread_mutex_t *check)
 {
 	int	nb;
 	int	i;
@@ -145,13 +151,13 @@ void	set_philos_vars(char **av, t_philo **philos, pthread_mutex_t **forks, pthre
 		//clockwise
 		if (i == 0)
 		{
-			(*philos)[i].l_fork = (*forks)[0];
-			(*philos)[i].r_fork = (*forks)[nb - 1];
+			(*philos)[i].l_fork = (*forks);//l_fork du 0 = sa propre fork ([0])
+			(*philos)[i].r_fork = (*forks) + (nb - 1);//r_fork du 0 = fork du dernier ([nb - 1])
 		}
 		else
 		{
-			(*philos)[i].l_fork = (*forks)[i];
-			(*philos)[i].r_fork = (*forks)[i - 1];
+			(*philos)[i].l_fork = (*forks)+ i;//l_fork du i = sa propre fork ([i])
+			(*philos)[i].r_fork = (*forks) + (i - 1);//r_fork du i = fork de celui d'avant ([i - 1])
 		}
 		(*philos)[i].check = check;
 		(*philos)[i].pos = (i + 1);
@@ -194,6 +200,7 @@ int	create_threads(t_philo **philos, int nb)
 	{
 		if (pthread_create(&(((*philos)[i].ID)), NULL, routine, (void *)&(*philos)[i]) != 0)
 		{
+			//protect access to data indicator here also
 			*indicator = 1;
 			printf("Error : pthread_create issue.\n");
 			return (0);
@@ -234,11 +241,12 @@ int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 	*philos = malloc(sizeof(t_philo) * nb);
 	if (!*philos)
 		return (0);
-	set_philos_vars(av, philos, forks, check);
+	set_philos_vars(av, philos, forks, &check);
 	if (create_threads(philos, nb) == 0)
 		return (0);
 	join_threads(philos, nb);
 	free_mutex(av, forks);
+	pthread_mutex_destroy(&check);
 	return (1);
 }
 
@@ -295,11 +303,6 @@ int main(int ac, char **av)
 		return (1);
 	if (!init_variables(av, &forks, &philos))
 		return (1);
-	
 
-		
-   printf("%ld\n", philos[0].ID);
-   printf("%ld\n", philos[1].ID);
-   printf("%ld\n", philos[2].ID);
 	return (0);
 	}

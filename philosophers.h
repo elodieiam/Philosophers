@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/18 11:10:33 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/18 18:29:25 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@
 typedef struct s_philo
 {
 	pthread_t 		ID;
-	pthread_mutex_t	l_fork;
-	pthread_mutex_t r_fork;
-	pthread_mutex_t	check;
+	pthread_mutex_t	*l_fork;
+	pthread_mutex_t *r_fork;
+	pthread_mutex_t	*check;
 	int				pos;
 	int				nb_philo;
 	int				time_die;
