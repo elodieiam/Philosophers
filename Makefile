@@ -3,7 +3,10 @@ NAME = philo
 CFLAGS = -Wall -Wextra -Werror -pthread -g3
 
 SRC = check_args.c\
-	main.c
+	main.c\
+	actions.c\
+	routine.c\
+	init.c\
 
 OBJ = $(SRC:.c=.o)
 

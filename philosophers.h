@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/18 18:29:25 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/18 21:21:08 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,4 +45,17 @@ void	free_mutex(char **av, pthread_mutex_t **forks);
 int	init_variables(char **av, pthread_mutex_t **forks, t_philo **philos);
 int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks);
 int	init_forks(char **av, pthread_mutex_t **forks);
+long long *start_time(void);
+int	*f(void);
+void	print_action(t_philo *philo, int indicator);
+void	pick_fork(t_philo *philo);
+void	wait(t_philo *philo);
+void	think(t_philo *philo);
+long long	get_time(void);
+void	eat(t_philo *philo);
+void	sleeping(t_philo *philo);
+void	*routine(void *arg);
+void	set_time_start(void);
+void	join_threads(t_philo **philos, int nb);
+
 #endif
