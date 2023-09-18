@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/17 22:12:04 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/18 11:33:19 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ void	pick_fork(t_philo *philo)
 	{
 		pthread_mutex_lock(&(philo->r_fork));
 		pthread_mutex_lock(&(philo->l_fork));
-		printf("Philo %d is eating\n", philo->pos);
+		//printf("Philo %d is eating\n", philo->pos);
 		pthread_mutex_unlock(&(philo->r_fork));
 		pthread_mutex_unlock(&(philo->l_fork));
 		
@@ -70,7 +70,7 @@ void	pick_fork(t_philo *philo)
 	{
 		pthread_mutex_lock((&philo->l_fork));
 		pthread_mutex_lock(&(philo->r_fork));
-		printf("Philo %d is eating\n", philo->pos);
+		//printf("Philo %d is eating\n", philo->pos);
 		pthread_mutex_unlock(&(philo->l_fork));
 		pthread_mutex_unlock(&(philo->r_fork));
 	}
@@ -108,24 +108,99 @@ void	*routine(void *arg)
 	philo = arg;
 	indicator = NULL;
 	
-	printf("Thread created\n");
-	wait(philo);//usleep (n° du philo x un certain temps défini)
+	//printf("Thread created\n");
+	wait(philo);
+	pthread_mutex_lock(&(philo->check));
 	indicator = f();
 	if (*indicator == 1)
+	{
+		pthread_mutex_unlock(&(philo->check));
 		return (NULL);
+	}
+	pthread_mutex_unlock(&(philo->check));
 	if (philo->pos % 2 == 0)
 	{
 		pick_fork(philo);
 	}
 	else
 	{
-		think(philo);
+		//think(philo);
 		pick_fork(philo);
 	}
 	//pick_fork(philo);
 	//lancer les actions : recup fourchette, drop fourchettes, sleep, think
 	//print message 
 	return (NULL);
+}
+
+void	set_philos_vars(char **av, t_philo **philos, pthread_mutex_t **forks, pthread_mutex_t check)
+{
+	int	nb;
+	int	i;
+
+	nb = ft_atoi(av[1]);
+	i = 0;
+	while (i < nb)
+	{
+		//clockwise
+		if (i == 0)
+		{
+			(*philos)[i].l_fork = (*forks)[0];
+			(*philos)[i].r_fork = (*forks)[nb - 1];
+		}
+		else
+		{
+			(*philos)[i].l_fork = (*forks)[i];
+			(*philos)[i].r_fork = (*forks)[i - 1];
+		}
+		(*philos)[i].check = check;
+		(*philos)[i].pos = (i + 1);
+		(*philos)[i].nb_philo = ft_atoi(av[1]);
+		(*philos)[i].time_die = ft_atoi(av[2]);
+		(*philos)[i].time_eat = ft_atoi(av[3]);
+		(*philos)[i].time_sleep = ft_atoi(av[4]); // = tab[i] == *(tab + i)
+		if (av[5])
+			(*philos)[i].number_meals = ft_atoi(av[5]);
+		else
+			(*philos)[i].number_meals = -1;
+		(*philos)[i].status = 1;
+		i++;
+	}
+}
+
+void	join_threads(t_philo **philos, int nb)
+{
+	int	i;
+
+	i = 0;
+	while (i < nb)
+	{
+		if (pthread_join(((*philos)[i]).ID, NULL) != 0)
+		{
+			printf("Error : pthread_join issue.\n");
+		}
+		i++;
+	}
+}
+
+int	create_threads(t_philo **philos, int nb)
+{
+	int	i;
+	int	*indicator;
+
+	i = 0;
+	indicator = f();
+	while (i < nb)
+	{
+		if (pthread_create(&(((*philos)[i].ID)), NULL, routine, (void *)&(*philos)[i]) != 0)
+		{
+			*indicator = 1;
+			printf("Error : pthread_create issue.\n");
+			return (0);
+		}
+		i++;
+	}
+	return (1);
 }
 
 /* ((*philos)[i]).pos : quand on fait ça on accède à la structure en indice i
@@ -152,60 +227,17 @@ la strcuture en indice i du tableau.
 int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
 {
 	int	nb;
-	int	i;
-	int	*indicator;
+	pthread_mutex_t	check;
 
 	nb = ft_atoi(av[1]);
-	i = 0;
-	indicator = f();
+	pthread_mutex_init(&check, NULL);
 	*philos = malloc(sizeof(t_philo) * nb);
 	if (!*philos)
 		return (0);
-	while (i < nb)
-	{
-		//clockwise
-		if (i == 0)
-		{
-			(*philos)[i].l_fork = (*forks)[0];
-			(*philos)[i].r_fork = (*forks)[nb - 1];
-		}
-		else
-		{
-			(*philos)[i].l_fork = (*forks)[i];
-			(*philos)[i].r_fork = (*forks)[i - 1];
-		}
-		(*philos)[i].pos = (i + 1);
-		(*philos)[i].nb_philo = ft_atoi(av[1]);
-		(*philos)[i].time_die = ft_atoi(av[2]);
-		(*philos)[i].time_eat = ft_atoi(av[3]);
-		(*philos)[i].time_sleep = ft_atoi(av[4]); // = tab[i] == *(tab + i)
-		if (av[5])
-			(*philos)[i].number_meals = ft_atoi(av[5]);
-		else
-			(*philos)[i].number_meals = -1;
-		(*philos)[i].status = 1;
-		i++;
-	}
-	i = 0;
-	while (i < nb)
-	{
-		if (pthread_create(&(((*philos)[i].ID)), NULL, routine, (void *)&(*philos)[i]) != 0)
-		{
-			*indicator = 1;
-			printf("Error : pthread_create issue.\n");
-			return (0);
-		}
-		i++;
-	}
-	i = 0;
-	while (i < nb)
-	{
-		if (pthread_join(((*philos)[i]).ID, NULL) != 0)
-		{
-			printf("Error : pthread_join issue.\n");
-		}
-		i++;
-	}
+	set_philos_vars(av, philos, forks, check);
+	if (create_threads(philos, nb) == 0)
+		return (0);
+	join_threads(philos, nb);
 	free_mutex(av, forks);
 	return (1);
 }
