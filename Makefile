@@ -1,11 +1,9 @@
 CC = cc 
 NAME = philo
-CFLAGS = -Wall -Wextra -Werror -pthread -g3
+CFLAGS = -Wall -Wextra -Werror -pthread -g3 -fsanitize=address
 
 SRC = check_args.c\
 	main.c\
-	actions.c\
-	routine.c\
 	init.c\
 
 OBJ = $(SRC:.c=.o)

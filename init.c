@@ -6,68 +6,12 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/18 21:18:46 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/21 14:40:28 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	set_philos_vars(char **av, t_philo **philos, pthread_mutex_t **forks, pthread_mutex_t *check)
-{
-	int	nb;
-	int	i;
-
-	nb = ft_atoi(av[1]);
-	i = 0;
-	while (i < nb)
-	{
-		//clockwise
-		if (i == 0)
-		{
-			(*philos)[i].l_fork = (*forks);//l_fork du 0 = sa propre fork ([0])
-			(*philos)[i].r_fork = (*forks) + (nb - 1);//r_fork du 0 = fork du dernier ([nb - 1])
-		}
-		else
-		{
-			(*philos)[i].l_fork = (*forks)+ i;//l_fork du i = sa propre fork ([i])
-			(*philos)[i].r_fork = (*forks) + (i - 1);//r_fork du i = fork de celui d'avant ([i - 1])
-		}
-		(*philos)[i].check = check;
-		(*philos)[i].pos = (i + 1);
-		(*philos)[i].nb_philo = ft_atoi(av[1]);
-		(*philos)[i].time_die = ft_atoi(av[2]);
-		(*philos)[i].time_eat = ft_atoi(av[3]);
-		(*philos)[i].time_sleep = ft_atoi(av[4]); // = tab[i] == *(tab + i)
-		if (av[5])
-			(*philos)[i].number_meals = ft_atoi(av[5]);
-		else
-			(*philos)[i].number_meals = -1;
-		(*philos)[i].status = 1;
-		i++;
-	}
-}
-
-int	create_threads(t_philo **philos, int nb)
-{
-	int	i;
-	int	*indicator;
-
-	i = 0;
-	indicator = f();
-	set_time_start();
-	while (i < nb)
-	{
-		if (pthread_create(&(((*philos)[i].ID)), NULL, routine, (void *)&(*philos)[i]) != 0)
-		{
-			//protect access to data indicator here also
-			*indicator = 1;
-			printf("Error : pthread_create issue.\n");
-			return (0);
-		}
-		i++;
-	}
-	return (1);
-}
 
 /* ((*philos)[i]).pos : quand on fait ça on accède à la structure en indice i
 On accède à ses composantes via le point et pas la -> car on travaille avec la structure
@@ -91,23 +35,91 @@ On envoie au thread un pointeur sur la structure qu'on veut donc &(*philos)[i] :
 la strcuture en indice i du tableau.
 (*philos)[i] c'est la struct mais on veut envoyer un pointeur*/
 
+int	init_data_philos(char **av, int ac, t_philo **philos)
+{
+	int	i;
+	int	nb;
 
-int	init_philos(char **av, t_philo **philos, pthread_mutex_t **forks)
+	i = 0;
+	nb = ft_atoi(av[1]);
+	while (i < nb)
+	{
+		(*philos)[i].ID = 0;
+		(*philos)[i].pos = i + 1;
+		(*philos)[i].nb_philo = ft_atoi(av[1]);
+		(*philos)[i].time_die = ft_atoi(av[2]);
+		(*philos)[i].time_eat = ft_atoi(av[3]);
+		(*philos)[i].time_sleep = ft_atoi(av[4]);
+		if (ac == 6)
+			(*philos)[i].number_meals = ft_atoi(av[5]);
+		else
+			(*philos)[i].number_meals = (-1);
+		(*philos)[i].status = 0;
+		(*philos)[i].death_time = ft_atoi(av[2]);
+		(*philos)[i].meals_eaten = 0;
+		(*philos)[i].time = get_time();
+		i++;
+	}
+	return (1);
+}
+
+int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
+{
+	int	i;
+	pthread_mutex_t	lock_philo;
+	pthread_mutex_t	write;
+
+	if (pthread_mutex_init(&lock_philo, NULL) != 0)
+		return (0);
+	if (pthread_mutex_init(&write, NULL) != 0)
+	{
+		pthread_mutex_destroy(&lock_philo);
+		return (0);
+	}
+	i = 0;
+	while (i < nb)
+	{
+		//clockwise
+		if (i == 0)
+		{
+			(*philos)[i].l_fork = (*forks);//l_fork du 0 = sa propre fork ([0])
+			(*philos)[i].r_fork = (*forks) + (nb - 1);//r_fork du 0 = fork du dernier ([nb - 1])
+		}
+		else
+		{
+			(*philos)[i].l_fork = (*forks)+ i;//l_fork du i = sa propre fork ([i])
+			(*philos)[i].r_fork = (*forks) + (i - 1);//r_fork du i = fork de celui d'avant ([i - 1])
+		}
+		(*philos)[i].lock_philo = &lock_philo;
+		(*philos)[i].write = &write;
+		i++;
+	}
+	return (1);
+}
+
+int	init_philos(char **av, int ac, t_philo **philos, pthread_mutex_t **forks)
 {
 	int	nb;
-	pthread_mutex_t	check;
-
+	int	i;
+	
 	nb = ft_atoi(av[1]);
-	pthread_mutex_init(&check, NULL);
+	i = 0;
 	*philos = malloc(sizeof(t_philo) * nb);
 	if (!*philos)
 		return (0);
-	set_philos_vars(av, philos, forks, &check);
-	if (create_threads(philos, nb) == 0)
+	if (!init_mutex_philos(nb, philos, forks))
 		return (0);
-	join_threads(philos, nb);
-	free_mutex(av, forks);
-	pthread_mutex_destroy(&check);
+	if (!init_data_philos(av, ac, philos))
+	{
+		free_mutex(av, forks);
+		while (i < nb)
+		{
+			pthread_mutex_destroy((*philos)[i].lock_philo);
+			pthread_mutex_destroy((*philos)[i].write);
+			i++;
+		}
+		return (0);
+	}
 	return (1);
 }
 
@@ -151,11 +163,11 @@ int	init_forks(char **av, pthread_mutex_t **forks)
 	return (1);
 }
 
-int	init_variables(char **av, pthread_mutex_t **forks, t_philo **philos)
+int	init_variables(char **av, int ac, pthread_mutex_t **forks, t_philo **philos)
 {
 	if (!init_forks(av, forks))
 		return (0);
-	if (!init_philos(av, philos, forks))
+	if (!init_philos(av, ac, philos, forks))
 	{
 		free_mutex(av, forks); //faut-il laisser pthread_join avant de free les mutex 
 		return (0);
