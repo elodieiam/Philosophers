@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 17:12:21 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/21 22:07:18 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ void	pick_forks(t_philo *philo)
 	if (philo->pos % 2 == 0)
 	{
 		pthread_mutex_lock((philo->r_fork));
+		printf("Pass\n");
 		print_messages(1, philo);
 		pthread_mutex_lock((philo->l_fork));
 		print_messages(1, philo);	
@@ -76,6 +77,7 @@ void	pick_forks(t_philo *philo)
 	else
 	{
 		pthread_mutex_lock((philo->l_fork));
+		printf("Pass impair\n");
 		print_messages(1, philo);
 		pthread_mutex_lock((philo->r_fork));
 		print_messages(1, philo);
@@ -102,10 +104,9 @@ void	print_messages(int flag, t_philo *philo)
 	long long	time;
 
 	//pthread_mutex_lock(philo->write);
-	
+	printf("before\n");
 	current_time = get_time();
 	time = current_time - (philo->time);
-	
 	if (flag == 1)
 		printf("%lld %d has taken a fork\n", time, philo->pos);
 	else if (flag == 2)
@@ -131,6 +132,7 @@ void	ft_sleep(t_philo *philo)
 	//tant que le moment où on en est dans le prog est < au moment où on doit en être avant que le philo finisse de manger
 	while ((current_time - time) < (arrival_time))
 	{
+		//printf("%lld\n", arrival_time);
 		usleep(5000); //50 micro = 5ms
 		current_time = get_time();
 	}
