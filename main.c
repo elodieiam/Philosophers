@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 15:05:27 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/21 15:39:30 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,23 +98,23 @@ void	drop_forks(t_philo *philo)
 
 void	print_messages(int flag, t_philo *philo)
 {
-	struct timeval tv;
-	
 	long long	current_time;
+	long long	time;
 
-	pthread_mutex_lock(philo->write);
-	gettimeofday(&tv, NULL);
+	//pthread_mutex_lock(philo->write);
 	
-	current_time = ((tv.tv_sec * 1000000 + tv.tv_usec) / 1000);
+	current_time = get_time();
+	time = current_time - (philo->time);
+	
 	if (flag == 1)
-		printf("%lld %d has taken a fork\n", current_time, philo->pos);
+		printf("%lld %d has taken a fork\n", time, philo->pos);
 	else if (flag == 2)
-		printf("%lld %d is thinking\n", current_time, philo->pos);
+		printf("%lld %d is thinking\n", time, philo->pos);
 	else if (flag == 3)
-		printf("%lld %d is eating\n", current_time, philo->pos);
+		printf("%lld %d is eating\n", time, philo->pos);
 	else if (flag == 4)
-		printf("%lld %d is sleeping\n", current_time, philo->pos);
-	pthread_mutex_unlock(philo->write);
+		printf("%lld %d is sleeping\n", time, philo->pos);
+	//pthread_mutex_unlock(philo->write);
 }
 
 void	eat(t_philo *philo)
@@ -152,6 +152,7 @@ void	*routine(void *arg)
 
 	philo = (t_philo *)arg;
 	synchronize_launch(philo);
+	philo->time = get_time();
 	while (philo->status != 1)
 	{
 		eat(philo);
