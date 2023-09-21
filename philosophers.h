@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 14:29:25 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/21 16:27:09 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ void	pick_forks(t_philo *philo);
 void	drop_forks(t_philo *philo);
 void	print_messages(int flag, t_philo *philo);
 void	eat(t_philo *philo);
-void	sleeping(t_philo *philo);
+void sleeping(t_philo *philo);
 void	think(t_philo *philo);
 void	*routine(void *arg);
 int	init_threads(t_philo *philos);

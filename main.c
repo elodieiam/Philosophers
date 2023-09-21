@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 15:39:30 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/21 17:12:21 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,15 +114,38 @@ void	print_messages(int flag, t_philo *philo)
 		printf("%lld %d is eating\n", time, philo->pos);
 	else if (flag == 4)
 		printf("%lld %d is sleeping\n", time, philo->pos);
+	else if (flag == 5)
+		printf("%lld %d a philo has died\n", time, philo->pos);
 	//pthread_mutex_unlock(philo->write);
+}
+
+void	ft_sleep(t_philo *philo)
+{
+	long long	time;
+	long long	current_time;
+	long long	arrival_time;
+	
+	time = philo->time;
+	current_time = get_time();
+	arrival_time = current_time - time + philo->time_sleep;
+	//tant que le moment où on en est dans le prog est < au moment où on doit en être avant que le philo finisse de manger
+	while ((current_time - time) < (arrival_time))
+	{
+		usleep(5000); //50 micro = 5ms
+		current_time = get_time();
+	}
+	if ((current_time - time) >= (current_time - time + philo->time_sleep))
+	{
+		philo->status = 1;
+		return ;
+	}
 }
 
 void	eat(t_philo *philo)
 {
 	pick_forks(philo);
 	philo->time_die = get_time() + philo->death_time;
-	print_messages(2, philo);
-	usleep((philo->time_eat) * 1000);
+	print_messages(3, philo);
 	philo->meals_eaten += 1;
 	drop_forks(philo);
 }
@@ -130,7 +153,7 @@ void	eat(t_philo *philo)
 void	sleeping(t_philo *philo)
 {
 	print_messages(4, philo);
-	usleep(philo->time_sleep);
+	ft_sleep(philo);
 }
 
 void	think(t_philo *philo)
@@ -146,6 +169,7 @@ void	synchronize_launch(t_philo *philo)
 	usleep((150 * (nb - 1)) * 1000);
 }
 
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -155,8 +179,18 @@ void	*routine(void *arg)
 	philo->time = get_time();
 	while (philo->status != 1)
 	{
+		if (philo->status == 1)
+		{
+			print_messages(5, philo);
+			return (NULL);
+		}
 		eat(philo);
 		sleeping(philo);
+		if (philo->status == 1)
+		{
+			print_messages(5, philo);
+			return (NULL);
+		}
 		think(philo);
 	}
 	return (NULL);
