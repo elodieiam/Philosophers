@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 22:07:18 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/22 16:09:32 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@ On peut donc accéder à la même variable partout pr voir sa valeur et/ou la mo
 Les variables booléennes sont initialisées à 'faux' par défaut 
 Voir test2.c
 */
-
 int	*f(void)
 {
 	static int var;
@@ -44,6 +43,7 @@ long long	get_time(void)
 
 	gettimeofday(&tv, NULL);
 	return ((tv.tv_sec * 1000000 + tv.tv_usec) / 1000);
+	//return ((tv.tv_sec * 1000000 + ((tv.tv_usec / 1000) * 1000)));
 }
 
 
@@ -68,19 +68,21 @@ void	pick_forks(t_philo *philo)
 {
 	if (philo->pos % 2 == 0)
 	{
-		pthread_mutex_lock((philo->r_fork));
-		printf("Pass\n");
-		print_messages(1, philo);
-		pthread_mutex_lock((philo->l_fork));
-		print_messages(1, philo);	
+		if (pthread_mutex_lock((philo->r_fork)))
+			printf("error\n");
+		print_messages(philo, "has taken a fork\n");
+		if (pthread_mutex_lock((philo->l_fork)))
+			printf("error\n");
+		print_messages(philo, "has taken a fork\n");	
 	}
 	else
 	{
-		pthread_mutex_lock((philo->l_fork));
-		printf("Pass impair\n");
-		print_messages(1, philo);
-		pthread_mutex_lock((philo->r_fork));
-		print_messages(1, philo);
+		if (pthread_mutex_lock((philo->l_fork)))
+			printf("error\n");
+		print_messages(philo, "has taken a fork\n");
+		if (pthread_mutex_lock((philo->r_fork)))
+			printf("error\n");
+		print_messages(philo, "has taken a fork\n");
 	}
 }
 
@@ -98,26 +100,19 @@ void	drop_forks(t_philo *philo)
 	}
 }
 
-void	print_messages(int flag, t_philo *philo)
+void	print_messages(t_philo *philo, char *str)
 {
 	long long	current_time;
 	long long	time;
 
+	//pthread_mutex_t mutex;
+	//pthread_mutex_init(&mutex, NULL);
 	//pthread_mutex_lock(philo->write);
-	printf("before\n");
 	current_time = get_time();
 	time = current_time - (philo->time);
-	if (flag == 1)
-		printf("%lld %d has taken a fork\n", time, philo->pos);
-	else if (flag == 2)
-		printf("%lld %d is thinking\n", time, philo->pos);
-	else if (flag == 3)
-		printf("%lld %d is eating\n", time, philo->pos);
-	else if (flag == 4)
-		printf("%lld %d is sleeping\n", time, philo->pos);
-	else if (flag == 5)
-		printf("%lld %d a philo has died\n", time, philo->pos);
+		printf("%lld %d %s\n", time, philo->pos, str);
 	//pthread_mutex_unlock(philo->write);
+	//pthread_mutex_destroy(&mutex);
 }
 
 void	ft_sleep(t_philo *philo)
@@ -138,7 +133,7 @@ void	ft_sleep(t_philo *philo)
 	}
 	if ((current_time - time) >= (current_time - time + philo->time_sleep))
 	{
-		philo->status = 1;
+		*(philo->status) = 1;
 		return ;
 	}
 }
@@ -147,20 +142,21 @@ void	eat(t_philo *philo)
 {
 	pick_forks(philo);
 	philo->time_die = get_time() + philo->death_time;
-	print_messages(3, philo);
+	print_messages(philo, "is eating\n");
+	usleep(philo->time_eat * 1000); //recoder usleep car pas aasez precis, faire plein de miniusleep
 	philo->meals_eaten += 1;
 	drop_forks(philo);
 }
 
 void	sleeping(t_philo *philo)
 {
-	print_messages(4, philo);
+	print_messages(philo, "is sleeping\n");
 	ft_sleep(philo);
 }
 
 void	think(t_philo *philo)
 {
-	print_messages(2, philo);
+	print_messages(philo, "is thinking\n");
 }
 
 void	synchronize_launch(t_philo *philo)
@@ -179,18 +175,23 @@ void	*routine(void *arg)
 	philo = (t_philo *)arg;
 	synchronize_launch(philo);
 	philo->time = get_time();
-	while (philo->status != 1)
+	//*(philo->status) = alive;
+	printf("%p\n", philo->status);
+	printf("%d\n", *(philo->status));
+	//check last meal : c'est comme s'il mangeait MAINTENANT
+	while (*(philo->status) == alive)
 	{
-		if (philo->status == 1)
+		printf("passe\n");
+		if (*(philo->status) == dead)
 		{
-			print_messages(5, philo);
+			print_messages(philo, "a philo has died\n");
 			return (NULL);
 		}
 		eat(philo);
 		sleeping(philo);
-		if (philo->status == 1)
+		if (*(philo->status) == dead)
 		{
-			print_messages(5, philo);
+			print_messages(philo, "a philo has died\n");
 			return (NULL);
 		}
 		think(philo);

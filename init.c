@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 20:44:45 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/22 15:59:20 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,13 @@ la strcuture en indice i du tableau.
 
 int	init_data_philos(char **av, int ac, t_philo **philos)
 {
-	int	i;
-	int	nb;
+	int		i;
+	int		nb;
+	bool	status;
 
 	i = 0;
 	nb = ft_atoi(av[1]);
+	status = alive;
 	while (i < nb)
 	{
 		(*philos)[i].ID = 0;
@@ -54,10 +56,11 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 			(*philos)[i].number_meals = ft_atoi(av[5]);
 		else
 			(*philos)[i].number_meals = (-1);
-		(*philos)[i].status = 0;
+		(*philos)[i].status = &status;
 		(*philos)[i].death_time = ft_atoi(av[2]);
 		(*philos)[i].meals_eaten = 0;
 		(*philos)[i].time = get_time();
+		printf("%p et %d\n",(*philos)[i].status, *((*philos)[i].status));
 		i++;
 	}
 	return (1);

@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/21 16:27:09 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/22 15:23:07 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdbool.h>
 #include <sys/time.h>
+
+typedef enum { alive, dead } bool;
 
 typedef struct s_philo
 {
@@ -33,7 +34,7 @@ typedef struct s_philo
 	int				time_eat;
 	int				time_sleep;
 	int				number_meals;
-	int				status;
+	bool			*status;
 	int				death_time;
 	int				meals_eaten;
 	long long		time;
@@ -59,7 +60,7 @@ long long	get_time(void);
 void	join_threads(t_philo **philos, int nb);
 void	pick_forks(t_philo *philo);
 void	drop_forks(t_philo *philo);
-void	print_messages(int flag, t_philo *philo);
+void	print_messages(t_philo *philo, char *message);
 void	eat(t_philo *philo);
 void sleeping(t_philo *philo);
 void	think(t_philo *philo);
