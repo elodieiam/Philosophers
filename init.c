@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/22 15:59:20 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/22 17:23:23 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,13 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 {
 	int		i;
 	int		nb;
-	bool	status;
+	//bool	*status;
+	static bool 	status;
+
 
 	i = 0;
 	nb = ft_atoi(av[1]);
+	//status = malloc(sizeof(bool));
 	status = alive;
 	while (i < nb)
 	{
@@ -68,9 +71,12 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 
 int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
 {
+	//il faut allouer soit en statique soit sur la heap
+	/*Sinon certes j'ai une & dans ma struct mais elle ne pointe
+	plus sur rien a la fin du prog*/
 	int	i;
 	pthread_mutex_t	lock_philo;
-	pthread_mutex_t	write;
+	static pthread_mutex_t	write;
 
 	if (pthread_mutex_init(&lock_philo, NULL) != 0)
 		return (0);

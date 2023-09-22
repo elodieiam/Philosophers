@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/22 16:09:32 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/22 17:13:13 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,8 +176,12 @@ void	*routine(void *arg)
 	synchronize_launch(philo);
 	philo->time = get_time();
 	//*(philo->status) = alive;
-	printf("%p\n", philo->status);
-	printf("%d\n", *(philo->status));
+	pthread_mutex_lock(philo->write);
+	printf("statut%p\n", philo->status);
+	*(philo->status) = 45;
+	printf("statut%d\n", *(philo->status));
+	pthread_mutex_unlock(philo->write);
+	//lock philo pour acceder a la valeur partagee
 	//check last meal : c'est comme s'il mangeait MAINTENANT
 	while (*(philo->status) == alive)
 	{
