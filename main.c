@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 11:51:02 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 14:45:37 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,9 +263,12 @@ void	*routine(void *arg)
 	t_philo	*philo;
 
 	philo = (t_philo *)arg;
+	// printf("%d pos of philo\n", philo->pos);
+	// return (NULL);
 	synchronize_launch(philo);
 	philo->time = get_time();
 	set_death_time(philo);
+	printf("%lld death time\n", philo->death_time);
 	if (philo->pos % 2)
 		usleep(500);
 	while (!is_dead(philo))
