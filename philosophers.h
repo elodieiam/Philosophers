@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/22 16:28:47 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 11:21:15 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ typedef struct s_philo
 	int				death_time;
 	int				meals_eaten;
 	long long		time;
-	// bool			*stop;
+	int				personal_status;
 } t_philo;
 
 long long	ft_atoi(const char *str);
@@ -66,6 +66,7 @@ void sleeping(t_philo *philo);
 void	think(t_philo *philo);
 void	*routine(void *arg);
 int	init_threads(t_philo *philos);
+int	is_dead(t_philo *philo);
 
 
 #endif

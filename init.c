@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/22 17:23:23 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 11:47:08 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,10 +60,10 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		else
 			(*philos)[i].number_meals = (-1);
 		(*philos)[i].status = &status;
-		(*philos)[i].death_time = ft_atoi(av[2]);
+		(*philos)[i].death_time = 0;
 		(*philos)[i].meals_eaten = 0;
 		(*philos)[i].time = get_time();
-		printf("%p et %d\n",(*philos)[i].status, *((*philos)[i].status));
+		(*philos)[i].personal_status = 0;
 		i++;
 	}
 	return (1);
@@ -75,7 +75,7 @@ int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
 	/*Sinon certes j'ai une & dans ma struct mais elle ne pointe
 	plus sur rien a la fin du prog*/
 	int	i;
-	pthread_mutex_t	lock_philo;
+	static pthread_mutex_t	lock_philo;
 	static pthread_mutex_t	write;
 
 	if (pthread_mutex_init(&lock_philo, NULL) != 0)
