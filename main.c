@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 16:14:58 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 17:35:04 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,30 +62,77 @@ void	join_threads(t_philo **philos, int nb)
 	}
 }
 
+int	died_before_picking_fork(t_philo *philo)
+{
+	long long	time;
+	long long	current_time;
+	
+	time = philo->time;
+	current_time = get_time() - time;
+	if (current_time >= philo->death_time)
+		return (1); //if died 
+	return (0);
+}
+
 void	pick_forks(t_philo *philo)
 {
 	if (philo->pos % 2 == 0)
 	{
+		if (died_before_picking_fork(philo))
+		{
+			pthread_mutex_lock(philo->lock_philo);
+			*(philo->status) = dead;
+			pthread_mutex_unlock(philo->lock_philo);
+			philo->personal_status = 1;
+			return ;
+		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
-		if (is_dead(philo))
+		if (is_dead(philo) || died_before_picking_fork(philo)) //si un philo est mort qqpart ou si le notre est mort avant de récup fourchette
 		{
+			//printf("%d passe ici\n", philo->pos);
 			pthread_mutex_unlock((philo->r_fork));
+			pthread_mutex_lock(philo->lock_philo);
+			if (*(philo->status) == dead)//vérifier qu'un philo n'est pas déjà mort : on est dans la 2è condition. (en +, sinon, si 2 philos mouraient en même temps à cet endroit, il faut vérifier lequel est mort le premier)
+			{
+				pthread_mutex_unlock(philo->lock_philo);
+				return ;
+			}	
+			*(philo->status) = dead;
+			pthread_mutex_unlock(philo->lock_philo);
+			philo->personal_status = 1;
 			return ;
 		}
 		print_messages(philo, "has taken a fork\n");
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
-		if (is_dead(philo))
+		if (is_dead(philo) || died_before_picking_fork(philo))
 		{
 			pthread_mutex_unlock((philo->r_fork));
 			pthread_mutex_unlock((philo->l_fork));
+			pthread_mutex_lock(philo->lock_philo);
+			if (*(philo->status) == dead)
+			{
+				pthread_mutex_unlock(philo->lock_philo);
+				return ;
+			}
+			*(philo->status) = dead;
+			pthread_mutex_unlock(philo->lock_philo);
+			philo->personal_status = 1;
 			return ;
 		}
 		print_messages(philo, "has taken a fork\n");	
 	}
 	else
 	{
+		if (died_before_picking_fork(philo))
+		{
+			pthread_mutex_lock(philo->lock_philo);
+			*(philo->status) = dead;
+			pthread_mutex_unlock(philo->lock_philo);
+			philo->personal_status = dead;
+			return ;
+		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
 		if (is_dead(philo))
@@ -152,6 +199,7 @@ void	ft_sleep(t_philo *philo)
 		{
 			pthread_mutex_lock(philo->lock_philo);
 			*(philo->status) = 1;
+			usleep(10);
 			pthread_mutex_unlock(philo->lock_philo);
 			philo->personal_status = 1;
 			return ;
@@ -259,7 +307,7 @@ void	set_death_time(t_philo *philo)
 int	are_fed(t_philo *philo)
 {
 	if (philo->number_meals == (-1))
-		return (1); //si ils ne sont pas nourris ou si le paramètre = -1
+		return (0); //0 et pas 1 à cause de && et || c'est chiant à réfléchir
 	if (philo->meals_eaten == philo->number_meals)
 		return (1);
 	return (0);
@@ -304,9 +352,6 @@ void	*routine(void *arg)
 			return (NULL);
 		}
 		think(philo);
-		pthread_mutex_lock(philo->write);
-		printf("philo %d ate %d\n", philo->pos, philo->meals_eaten);
-		pthread_mutex_unlock(philo->write);
 	}
 	return (NULL);
 }
