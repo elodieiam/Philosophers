@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 14:45:37 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 16:14:58 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,6 @@ long long	get_time(void)
 	return ((tv.tv_sec * 1000000 + tv.tv_usec) / 1000);
 	//return ((tv.tv_sec * 1000000 + ((tv.tv_usec / 1000) * 1000)));
 }
-
-
 
 
 void	join_threads(t_philo **philos, int nb)
@@ -258,6 +256,15 @@ void	set_death_time(t_philo *philo)
 	philo->death_time = (current_time - time) + philo->time_die;
 }
 
+int	are_fed(t_philo *philo)
+{
+	if (philo->number_meals == (-1))
+		return (1); //si ils ne sont pas nourris ou si le paramètre = -1
+	if (philo->meals_eaten == philo->number_meals)
+		return (1);
+	return (0);
+}
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -268,10 +275,10 @@ void	*routine(void *arg)
 	synchronize_launch(philo);
 	philo->time = get_time();
 	set_death_time(philo);
-	printf("%lld death time\n", philo->death_time);
+	// printf("%lld death time\n", philo->death_time);
 	if (philo->pos % 2)
 		usleep(500);
-	while (!is_dead(philo))
+	while (!is_dead(philo) && !are_fed(philo))
 	{
 		if (is_dead(philo))
 		{
@@ -297,6 +304,9 @@ void	*routine(void *arg)
 			return (NULL);
 		}
 		think(philo);
+		pthread_mutex_lock(philo->write);
+		printf("philo %d ate %d\n", philo->pos, philo->meals_eaten);
+		pthread_mutex_unlock(philo->write);
 	}
 	return (NULL);
 }
