@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 17:35:04 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/25 21:38:07 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,11 @@ void	pick_forks(t_philo *philo)
 		if (died_before_picking_fork(philo))
 		{
 			pthread_mutex_lock(philo->lock_philo);
-			*(philo->status) = dead;
+			if (*(philo->status) == dead)//vérifier qu'un philo n'est pas déjà mort : on est dans la 2è condition. (en +, sinon, si 2 philos mouraient en même temps à cet endroit, il faut vérifier lequel est mort le premier)
+			{
+				pthread_mutex_unlock(philo->lock_philo);
+				return ;
+			}	
 			pthread_mutex_unlock(philo->lock_philo);
 			philo->personal_status = 1;
 			return ;
@@ -103,25 +107,25 @@ void	pick_forks(t_philo *philo)
 			philo->personal_status = 1;
 			return ;
 		}
-		print_messages(philo, "has taken a fork\n");
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
-		if (is_dead(philo) || died_before_picking_fork(philo))
-		{
-			pthread_mutex_unlock((philo->r_fork));
-			pthread_mutex_unlock((philo->l_fork));
-			pthread_mutex_lock(philo->lock_philo);
-			if (*(philo->status) == dead)
-			{
-				pthread_mutex_unlock(philo->lock_philo);
-				return ;
-			}
-			*(philo->status) = dead;
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = 1;
-			return ;
-		}
-		print_messages(philo, "has taken a fork\n");	
+		// if (is_dead(philo) || died_before_picking_fork(philo))
+		// {
+
+		// 	pthread_mutex_unlock((philo->r_fork));
+		// 	pthread_mutex_unlock((philo->l_fork));
+		// 	pthread_mutex_lock(philo->lock_philo);
+		// 	if (*(philo->status) == dead)
+		// 	{
+		// 		pthread_mutex_unlock(philo->lock_philo);
+		// 		return ;
+		// 	}
+		// 	*(philo->status) = dead;
+		// 	pthread_mutex_unlock(philo->lock_philo);
+		// 	philo->personal_status = 1;
+		// 	return ;
+		// }
+		print_messages(philo, "has taken 2nd fork\n");	
 	}
 	else
 	{
@@ -143,12 +147,12 @@ void	pick_forks(t_philo *philo)
 		print_messages(philo, "has taken a fork\n");
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
-		if (is_dead(philo))
-		{
-			pthread_mutex_unlock((philo->l_fork));
-			pthread_mutex_unlock((philo->r_fork));
-			return ;
-		}
+		// if (is_dead(philo))
+		// {
+		// 	pthread_mutex_unlock((philo->l_fork));
+		// 	pthread_mutex_unlock((philo->r_fork));
+		// 	return ;
+		// }
 		print_messages(philo, "has taken a fork\n");
 	}
 }
@@ -199,7 +203,6 @@ void	ft_sleep(t_philo *philo)
 		{
 			pthread_mutex_lock(philo->lock_philo);
 			*(philo->status) = 1;
-			usleep(10);
 			pthread_mutex_unlock(philo->lock_philo);
 			philo->personal_status = 1;
 			return ;
@@ -250,12 +253,26 @@ void	eat(t_philo *philo)
 
 void	sleeping(t_philo *philo)
 {
+	pthread_mutex_lock(philo->lock_philo);
+	if (*(philo)->status)
+	{
+		pthread_mutex_unlock(philo->lock_philo);
+		return ;
+	}
+	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is sleeping\n");
 	ft_sleep(philo);
 }
 
 void	think(t_philo *philo)
 {
+	pthread_mutex_lock(philo->lock_philo);
+	if (*(philo->status))
+	{
+		pthread_mutex_unlock(philo->lock_philo);
+		return ;
+	}
+	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is thinking\n");
 }
 
@@ -313,6 +330,25 @@ int	are_fed(t_philo *philo)
 	return (0);
 }
 
+void	case_one(t_philo *philo)
+{
+	long long	time;
+	long long	current_time;
+	
+	time = philo->time;
+	current_time = get_time() - time;
+	pthread_mutex_lock(philo->l_fork);
+	print_messages(philo, "has taken a fork\n");
+	while (current_time < philo->death_time)
+	{
+		usleep(50);
+		current_time = get_time() - time;
+	}
+	pthread_mutex_unlock(philo->l_fork);
+	print_messages(philo, "has died\n");
+	
+}
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -323,17 +359,23 @@ void	*routine(void *arg)
 	synchronize_launch(philo);
 	philo->time = get_time();
 	set_death_time(philo);
+	if (philo->nb_philo == 1)
+	{
+		case_one(philo);
+		return (NULL);
+	}
 	// printf("%lld death time\n", philo->death_time);
 	if (philo->pos % 2)
-		usleep(500);
+		usleep(50);
 	while (!is_dead(philo) && !are_fed(philo))
 	{
-		if (is_dead(philo))
-		{
-			print_death_message(philo);//pr que le msg de mort s'affiche seulement si c'est le philo concerné qui est mort
-			return (NULL);
-		}
+		// if (is_dead(philo))
+		// {
+		// 	print_death_message(philo);//pr que le msg de mort s'affiche seulement si c'est le philo concerné qui est mort
+		// 	return (NULL);
+		// }
 		pick_forks(philo);
+		//vérifier si il n'est pas mort avant d'avoir pu récupérer sa 2e fourchette !?
 		if (is_dead(philo))
 		{
 			print_death_message(philo);
@@ -353,6 +395,7 @@ void	*routine(void *arg)
 		}
 		think(philo);
 	}
+	printf("Philo %d a mange %d fois\n", philo->pos, philo->meals_eaten);
 	return (NULL);
 }
 
