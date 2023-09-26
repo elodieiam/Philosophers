@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 18:06:46 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 21:55:11 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,33 +64,14 @@ void	pick_forks(t_philo *philo)
 {
 	if (philo->pos % 2 == 0)
 	{
-		if (died_before_picking_fork(philo))
-		{
-			pthread_mutex_lock(philo->lock_philo);
-			if (*(philo->status) == dead)//vérifier qu'un philo n'est pas déjà mort : on est dans la 2è condition. (en +, sinon, si 2 philos mouraient en même temps à cet endroit, il faut vérifier lequel est mort le premier)
-			{
-				pthread_mutex_unlock(philo->lock_philo);
-				return ;
-			}	
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = 1;
+		if (is_dead(philo))
 			return ;
-		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		print_messages(philo, "has taken 1st fork\n");
-		if (is_dead(philo) || died_before_picking_fork(philo)) //si un philo est mort qqpart ou si le notre est mort avant de récup fourchette
+		if (is_dead(philo))
 		{
 			pthread_mutex_unlock((philo->r_fork));
-			pthread_mutex_lock(philo->lock_philo);
-			if (*(philo->status) == dead)//vérifier qu'un philo n'est pas déjà mort : on est dans la 2è condition. (en +, sinon, si 2 philos mouraient en même temps à cet endroit, il faut vérifier lequel est mort le premier)
-			{
-				pthread_mutex_unlock(philo->lock_philo);
-				return ;
-			}	
-			*(philo->status) = dead;
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = 1;
 			return ;
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
@@ -99,14 +80,8 @@ void	pick_forks(t_philo *philo)
 	}
 	else
 	{
-		if (died_before_picking_fork(philo))
-		{
-			pthread_mutex_lock(philo->lock_philo);
-			*(philo->status) = dead;
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = dead;
+		if (is_dead(philo))
 			return ;
-		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
 		if (is_dead(philo))
@@ -217,13 +192,8 @@ void	eat(t_philo *philo)
 
 void	sleeping(t_philo *philo)
 {
-	pthread_mutex_lock(philo->lock_philo);
-	if (*(philo)->status)
-	{
-		pthread_mutex_unlock(philo->lock_philo);
+	if (is_dead(philo))
 		return ;
-	}
-	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is sleeping\n");
 	ft_sleep(philo);
 }
@@ -238,12 +208,23 @@ void	think(t_philo *philo)
 	}
 	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is thinking\n");
-	//r_fork ou l_fork ? 
-	while ((philo->r_fork)->__align)
+	if (philo->pos % 2 == 0)
 	{
-		if (is_dead(philo))
-			return ;
-		usleep(500);
+		while ((philo->r_fork)->__align)
+		{
+			if (is_dead(philo))
+				return ;
+			usleep(500);
+		}
+	}
+	else
+	{
+		while ((philo->l_fork)->__align)
+		{
+			if (is_dead(philo))
+				return ;
+			usleep(500);
+		}
 	}
 }
 
@@ -276,22 +257,11 @@ int	is_dead(t_philo *philo)
 		*(philo->status) = dead;
 		pthread_mutex_unlock(philo->lock_philo);
 		print_messages(philo, "has died\n");
+		return (1);
 	}
 	return (0);
 }
 
-void	print_death_message(t_philo *philo)
-{
-	long long	current_time;
-	long long	time;
-
-	current_time = get_time();
-	time = current_time - (philo->time);
-	if (philo->personal_status)
-	{
-		print_messages(philo, "a philo has died\n");
-	}
-}
 
 void	set_death_time(t_philo *philo)
 {
@@ -359,15 +329,7 @@ void	*routine(void *arg)
 		usleep(1000);
 	while (!is_dead(philo) && !are_fed(philo))
 	{
-		// if (is_dead(philo))
-		// {
-		// 	print_death_message(philo);//pr que le msg de mort s'affiche seulement si c'est le philo concerné qui est mort
-		// 	return (NULL);
-		// }
 		pick_forks(philo);
-		//vérifier si il n'est pas mort avant d'avoir pu récupérer sa 2e fourchette !?
-		if (is_dead(philo))
-			return (NULL);
 		eat(philo);
 		if (is_dead(philo))
 			return (NULL);
