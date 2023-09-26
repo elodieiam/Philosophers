@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 16:12:18 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 15:30:46 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,11 +41,13 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 	int		nb;
 	//bool	*status;
 	static bool 	status;
+	static int		init_check;
 
 	i = 0;
 	nb = ft_atoi(av[1]);
 	//status = malloc(sizeof(bool));
 	status = alive;
+	init_check = 0;
 	while (i < nb)
 	{
 		(*philos)[i].ID = 0;
@@ -63,6 +65,7 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		(*philos)[i].meals_eaten = 0;
 		(*philos)[i].time = get_time();
 		(*philos)[i].personal_status = 0;
+		(*philos)[i].init_check = &init_check;
 		i++;
 	}
 	return (1);

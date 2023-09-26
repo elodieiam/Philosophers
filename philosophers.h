@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/25 16:12:09 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 15:29:27 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ typedef struct s_philo
 	int				meals_eaten;
 	long long		time;
 	int				personal_status;
+	int				*init_check;
 } t_philo;
 
 long long	ft_atoi(const char *str);
