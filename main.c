@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 17:22:13 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 18:06:46 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,8 +140,6 @@ void	print_messages(t_philo *philo, char *str)
 	long long	current_time;
 	long long	time;
 	
-	// if (is_dead(philo))
-	// 	return ;
 	pthread_mutex_lock(philo->write);
 	current_time = get_time();
 	time = current_time - (philo->time);
@@ -240,6 +238,7 @@ void	think(t_philo *philo)
 	}
 	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is thinking\n");
+	//r_fork ou l_fork ? 
 	while ((philo->r_fork)->__align)
 	{
 		if (is_dead(philo))
@@ -258,6 +257,10 @@ void	synchronize_launch(t_philo *philo)
 
 int	is_dead(t_philo *philo)
 {
+	long long	current_time;
+	long long	time;
+
+
 	pthread_mutex_lock(philo->lock_philo);
 	if (*(philo->status) == dead)
 	{
@@ -265,6 +268,15 @@ int	is_dead(t_philo *philo)
 		return (1);
 	}
 	pthread_mutex_unlock(philo->lock_philo);
+	current_time = get_time();
+	time = current_time - (philo->time);
+	if (philo->death_time < time)
+	{
+		pthread_mutex_lock(philo->lock_philo);
+		*(philo->status) = dead;
+		pthread_mutex_unlock(philo->lock_philo);
+		print_messages(philo, "has died\n");
+	}
 	return (0);
 }
 
@@ -355,25 +367,16 @@ void	*routine(void *arg)
 		pick_forks(philo);
 		//vérifier si il n'est pas mort avant d'avoir pu récupérer sa 2e fourchette !?
 		if (is_dead(philo))
-		{
-			print_death_message(philo);
 			return (NULL);
-		}
 		eat(philo);
 		if (is_dead(philo))
-		{
-			print_death_message(philo);
 			return (NULL);
-		}
 		sleeping(philo);
 		if (is_dead(philo)) //est-ce utile ?
-		{
-			print_death_message(philo);
 			return (NULL);
-		}
 		think(philo);
 	}
-	printf("philo %d ate %d times\n", philo->pos, philo->meals_eaten);
+	//printf("philo %d ate %d times\n", philo->pos, philo->meals_eaten);
 	return (NULL);
 }
 
