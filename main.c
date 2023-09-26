@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 15:28:52 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 16:24:46 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,10 +78,9 @@ void	pick_forks(t_philo *philo)
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
-		print_messages(philo, "has taken 1st fork\n");	
+		print_messages(philo, "has taken 1st fork\n");
 		if (is_dead(philo) || died_before_picking_fork(philo)) //si un philo est mort qqpart ou si le notre est mort avant de récup fourchette
 		{
-			//printf("%d passe ici\n", philo->pos);
 			pthread_mutex_unlock((philo->r_fork));
 			pthread_mutex_lock(philo->lock_philo);
 			if (*(philo->status) == dead)//vérifier qu'un philo n'est pas déjà mort : on est dans la 2è condition. (en +, sinon, si 2 philos mouraient en même temps à cet endroit, il faut vérifier lequel est mort le premier)
@@ -270,9 +269,7 @@ void	print_death_message(t_philo *philo)
 	time = current_time - (philo->time);
 	if (philo->personal_status)
 	{
-		pthread_mutex_lock(philo->write);
-		printf("%lld %d a philo died\n", time, philo->pos);
-		pthread_mutex_unlock(philo->write);
+		print_messages(philo, "a philo has died\n");
 	}
 }
 
