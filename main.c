@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 16:24:46 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/26 17:22:13 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,9 @@ void	print_messages(t_philo *philo, char *str)
 {
 	long long	current_time;
 	long long	time;
-
+	
+	// if (is_dead(philo))
+	// 	return ;
 	pthread_mutex_lock(philo->write);
 	current_time = get_time();
 	time = current_time - (philo->time);
@@ -238,6 +240,12 @@ void	think(t_philo *philo)
 	}
 	pthread_mutex_unlock(philo->lock_philo);
 	print_messages(philo, "is thinking\n");
+	while ((philo->r_fork)->__align)
+	{
+		if (is_dead(philo))
+			return ;
+		usleep(500);
+	}
 }
 
 void	synchronize_launch(t_philo *philo)
