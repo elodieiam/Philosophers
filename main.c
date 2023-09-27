@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/27 15:41:27 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/27 22:11:47 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,21 +49,25 @@ long long	get_time(void)
 
 void	pick_forks(t_philo *philo)
 {
+	/*la fonction peut return sous plusieurs conditions
+	soit on a réussi à prendre des forks, auquel cas si qqn meurt dans routine on les drop
+	mais elle peut aussi return avant d'avoir réussi à prendre les fourchettes, auqel cas on essaye ensuite de 
+	drop des forks qui n'ont pas été prises*/
 	if (is_dead(philo))
-		return ;
+			return ; //ici
 	if (philo->pos % 2 == 0)
 	{
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
-		print_messages(philo, "has taken 1st fork\n");
+		print_messages(philo, "has taken a fork\n");
 		if (is_dead(philo))
 		{
 			pthread_mutex_unlock((philo->r_fork));
-			return ;
+			return ;//ici
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
-		print_messages(philo, "has taken 2nd fork\n");	
+		print_messages(philo, "has taken a fork\n");	
 	}
 	else
 	{
@@ -72,13 +76,15 @@ void	pick_forks(t_philo *philo)
 		if (is_dead(philo))
 		{
 			pthread_mutex_unlock((philo->l_fork));
-			return ;
+			return ; //ici
 		}
 		print_messages(philo, "has taken left fork\n");
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		print_messages(philo, "has taken 2nd fork\n");
-	}
+	}//btw on ne vérifie pas la mort entre chaque prise de fork car si l'une est dispo alors l'autre l'est forcément car on inverse
+	//la prise et la dépose de fourchette entre pairs et impairs
+	return ; //il n'y a qu'ici qu'on est sûr que le philo a bien ses 2 fourchettes en main
 }
 
 void	drop_forks(t_philo *philo)
@@ -95,6 +101,7 @@ void	drop_forks(t_philo *philo)
 	}
 }
 
+
 void	print_messages(t_philo *philo, char *str)
 {
 	long long	current_time;
@@ -102,6 +109,7 @@ void	print_messages(t_philo *philo, char *str)
 	
 	if (is_dead(philo))
 		return ;
+	//ici dans certains cas, une mort a eu lieu mais on ne la voit pas car on a un léger temps d'attente pour verrouiller write donc on affiche le msg quand meme, qq ms après la mort
 	pthread_mutex_lock(philo->write);
 	current_time = get_time();
 	time = current_time - (philo->time);
@@ -151,6 +159,11 @@ void	my_usleep(t_philo *philo)
 
 void	eat(t_philo *philo)
 {
+	if (is_dead(philo))
+	{
+		drop_forks(philo);
+		return ;
+	}
 	philo->death_time = (get_time() - philo->time) + philo->time_die;
 	print_messages(philo, "is eating\n");
 	my_usleep(philo); //recoder usleep car pas aasez precis, faire plein de miniusleep + checker en même temps la mort
@@ -346,6 +359,7 @@ void	*routine(void *arg)
 		lauch_odd_philos(philo);
 		if (is_dead(philo))
 		{
+			//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
 			return (NULL);
 		}
 	}
@@ -353,24 +367,34 @@ void	*routine(void *arg)
 	{
 		pick_forks(philo);
 		if (is_dead(philo))
+		{
+			//if (retour de pick_fork (stocké dans une var) == 1 alors drop forks, sinon return)
+			drop_forks(philo);
 			return (NULL);
+		}
+		 //Vérifer le retour de pick_forks car la fonction peut return si il y a une mort sans pick de fourchette
+		// à ce moment -là on drop des forks qui n'ont pas été prises !
+		if (is_dead(philo))
+		{
+			return (NULL) ;
+		}
 		eat(philo);
 		if ((philo->number_meals) != -1)
 		{
 			if (philo->meals_eaten == philo->number_meals)
 			{
-				printf("Philo %d ate %d times\n", philo->pos, philo->meals_eaten);
+					//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
 				return (NULL);		
 			}
 		}
 		if (is_dead(philo))
 			return (NULL);
 		sleeping(philo);
-		if (is_dead(philo)) //est-ce utile ?
-			return (NULL);
+		// if (is_dead(philo)) //est-ce utile ?
+		// 	return (NULL);
 		think(philo);
 	}
-	printf("Philo %d ate %d times\n", philo->pos, philo->meals_eaten);
+	//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
 	return (NULL);
 }
 
@@ -393,6 +417,7 @@ int	init_threads(t_philo *philos)
 		}
 		i++;
 	}
+	i = 0;
 	i = 0;
 	while (i < nb)
 	{

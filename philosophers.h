@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 15:29:27 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/27 21:59:37 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ void	think(t_philo *philo);
 void	*routine(void *arg);
 int	init_threads(t_philo *philos);
 int	is_dead(t_philo *philo);
+void	philo_odd_waits(t_philo *philo, int to_wait);
 
 
 #endif
