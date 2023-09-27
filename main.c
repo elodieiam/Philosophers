@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/26 21:55:11 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/27 12:07:05 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,25 +47,12 @@ long long	get_time(void)
 }
 
 
-
-int	died_before_picking_fork(t_philo *philo)
-{
-	long long	time;
-	long long	current_time;
-	
-	time = philo->time;
-	current_time = get_time() - time;
-	if (current_time >= philo->death_time)
-		return (1); //if died 
-	return (0);
-}
-
 void	pick_forks(t_philo *philo)
 {
+	if (is_dead(philo))
+		return ;
 	if (philo->pos % 2 == 0)
 	{
-		if (is_dead(philo))
-			return ;
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		print_messages(philo, "has taken 1st fork\n");
@@ -80,8 +67,6 @@ void	pick_forks(t_philo *philo)
 	}
 	else
 	{
-		if (is_dead(philo))
-			return ;
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
 		if (is_dead(philo))
@@ -89,10 +74,10 @@ void	pick_forks(t_philo *philo)
 			pthread_mutex_unlock((philo->l_fork));
 			return ;
 		}
-		print_messages(philo, "has taken a fork\n");
+		print_messages(philo, "has taken 1st fork\n");
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
-		print_messages(philo, "has taken a fork\n");
+		print_messages(philo, "has taken 2nd fork\n");
 	}
 }
 
@@ -115,6 +100,8 @@ void	print_messages(t_philo *philo, char *str)
 	long long	current_time;
 	long long	time;
 	
+	if (is_dead(philo))
+		return ;
 	pthread_mutex_lock(philo->write);
 	current_time = get_time();
 	time = current_time - (philo->time);
@@ -138,14 +125,6 @@ void	ft_sleep(t_philo *philo)
 		ça n'arrivera donc jamais. Ce n'est pas ça qu'il faut vérifier.*/
 		if (is_dead(philo))
 			return ;
-		if ((current_time - time) >= philo->death_time)
-		{
-			pthread_mutex_lock(philo->lock_philo);
-			*(philo->status) = 1;
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = 1;
-			return ;
-		}
 		usleep(500); //50 micro = 5ms
 		current_time = get_time();
 	}
@@ -165,14 +144,6 @@ void	my_usleep(t_philo *philo)
 	{
 		if (is_dead(philo))
 			return ;
-		if ((current_time - time) >= philo->death_time)
-		{
-			pthread_mutex_lock(philo->lock_philo);
-			*(philo->status) = 1;
-			pthread_mutex_unlock(philo->lock_philo);
-			philo->personal_status = 1;
-			return ;
-		}
 		usleep(500); //50 micro = 5ms
 		current_time = get_time();
 	}
@@ -200,13 +171,8 @@ void	sleeping(t_philo *philo)
 
 void	think(t_philo *philo)
 {
-	pthread_mutex_lock(philo->lock_philo);
-	if (*(philo->status))
-	{
-		pthread_mutex_unlock(philo->lock_philo);
-		return ;
-	}
-	pthread_mutex_unlock(philo->lock_philo);
+	if (is_dead(philo))
+		return;
 	print_messages(philo, "is thinking\n");
 	if (philo->pos % 2 == 0)
 	{
@@ -255,8 +221,8 @@ int	is_dead(t_philo *philo)
 	{
 		pthread_mutex_lock(philo->lock_philo);
 		*(philo->status) = dead;
+		printf("%lld %d a philo has died\n", time, philo->pos);
 		pthread_mutex_unlock(philo->lock_philo);
-		print_messages(philo, "has died\n");
 		return (1);
 	}
 	return (0);
@@ -310,6 +276,44 @@ int	check_init(t_philo *philo)
 	return (0);
 }
 
+void	philo_odd_waits(t_philo *philo, long long to_wait)
+{
+	long long	time;
+	long long	current_time;
+
+	time = philo->time;
+	current_time = get_time();
+	while ((current_time - time) < to_wait)
+	{
+		if (is_dead(philo))
+			return ;
+		usleep(500); 
+		current_time = get_time();
+	}
+	while ((philo->l_fork)->__align)
+	{
+		if (is_dead(philo))
+			return ;
+		usleep(500);
+	}
+}
+
+/* on fait attendre les philos impairs 
+les impairs classiques attendent "time to eat", le temps que les pairs mangent
+le dernier impair attend le temps qu'ils mangent + moitié du temps qu'ils mangent
+pr laisser le temps aux autres impairs de commencer à manger sans interférence*/
+void	lauch_odd_philos(t_philo *philo)
+{
+	int	nb_philo;
+
+	nb_philo = philo->nb_philo;
+	print_messages(philo, "IS THINKING\n");
+	if ((nb_philo % 2) && (philo->pos = nb_philo)) //si nb philo impair et que c'est le dernier philo
+		philo_odd_waits(philo, (philo->time_eat + philo->time_eat / 2));
+	if (philo->pos % 2)
+		philo_odd_waits(philo, philo->time_eat);
+}
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -326,10 +330,18 @@ void	*routine(void *arg)
 		return (NULL);
 	}
 	if (philo->pos % 2)
-		usleep(1000);
+	{
+		lauch_odd_philos(philo);
+		if (is_dead(philo))
+		{
+			return (NULL);
+		}
+	}
 	while (!is_dead(philo) && !are_fed(philo))
 	{
 		pick_forks(philo);
+		if (is_dead(philo))
+			return (NULL);
 		eat(philo);
 		if (is_dead(philo))
 			return (NULL);
