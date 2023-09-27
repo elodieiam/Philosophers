@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/27 12:07:05 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/27 15:41:27 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void	pick_forks(t_philo *philo)
 			pthread_mutex_unlock((philo->l_fork));
 			return ;
 		}
-		print_messages(philo, "has taken 1st fork\n");
+		print_messages(philo, "has taken left fork\n");
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		print_messages(philo, "has taken 2nd fork\n");
@@ -217,11 +217,23 @@ int	is_dead(t_philo *philo)
 	pthread_mutex_unlock(philo->lock_philo);
 	current_time = get_time();
 	time = current_time - (philo->time);
+	/*si on constate que notre philo est mort, il faut lock le statut général
+	on doit lock nest le mutex sur write car sinon ce mutex
+	peut être lock par qqn d'autre qui constate la mort d'un philo mais n'affiche rien
+	car on vérifie avant d'afficher dans print_messages si un philo est mort*/
 	if (philo->death_time < time)
 	{
 		pthread_mutex_lock(philo->lock_philo);
+		//sinon plusieurs philos peuvent entrer et mettre le statut à 'dead' alors que l'un d'eux est déjà mort
+		if(*(philo->status) == dead)
+		{
+			pthread_mutex_unlock(philo->lock_philo);
+			return (1);
+		}
 		*(philo->status) = dead;
+		pthread_mutex_lock(philo->write);
 		printf("%lld %d a philo has died\n", time, philo->pos);
+		pthread_mutex_unlock(philo->write);
 		pthread_mutex_unlock(philo->lock_philo);
 		return (1);
 	}
@@ -276,7 +288,7 @@ int	check_init(t_philo *philo)
 	return (0);
 }
 
-void	philo_odd_waits(t_philo *philo, long long to_wait)
+void	philo_odd_waits(t_philo *philo, int to_wait)
 {
 	long long	time;
 	long long	current_time;
@@ -308,9 +320,9 @@ void	lauch_odd_philos(t_philo *philo)
 
 	nb_philo = philo->nb_philo;
 	print_messages(philo, "IS THINKING\n");
-	if ((nb_philo % 2) && (philo->pos = nb_philo)) //si nb philo impair et que c'est le dernier philo
+	if ((nb_philo % 2) && (philo->pos == nb_philo)) //si nb philo impair et que c'est le dernier philo
 		philo_odd_waits(philo, (philo->time_eat + philo->time_eat / 2));
-	if (philo->pos % 2)
+	else if (philo->pos % 2)
 		philo_odd_waits(philo, philo->time_eat);
 }
 
@@ -343,6 +355,14 @@ void	*routine(void *arg)
 		if (is_dead(philo))
 			return (NULL);
 		eat(philo);
+		if ((philo->number_meals) != -1)
+		{
+			if (philo->meals_eaten == philo->number_meals)
+			{
+				printf("Philo %d ate %d times\n", philo->pos, philo->meals_eaten);
+				return (NULL);		
+			}
+		}
 		if (is_dead(philo))
 			return (NULL);
 		sleeping(philo);
@@ -350,7 +370,7 @@ void	*routine(void *arg)
 			return (NULL);
 		think(philo);
 	}
-	//printf("philo %d ate %d times\n", philo->pos, philo->meals_eaten);
+	printf("Philo %d ate %d times\n", philo->pos, philo->meals_eaten);
 	return (NULL);
 }
 
@@ -408,5 +428,9 @@ int main(int ac, char **av)
 		free(forks);
 		return (1); //+free tout ce qu'il faut (créer une struct pour garder tout ce qu'on doit free en mémoire ?)
 	}
+	pthread_mutex_destroy((philos->lock_philo));
+	pthread_mutex_destroy((philos->write));
+	free(philos);
+	free_mutex(av, &forks);
 	return (0);
 }
