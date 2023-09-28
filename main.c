@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/28 15:00:14 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/28 15:44:08 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,6 +374,8 @@ void	*routine(void *arg)
 	philo = (t_philo *)arg;
 	synchronize_launch(philo);
 	philo->time = get_time();
+	printf("temps de depart : %lld\n", philo->time);
+	return (NULL);
 	set_death_time(philo);
 	if (check_init(philo))
 		return (NULL);
