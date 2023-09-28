@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/28 15:44:08 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/28 17:03:58 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,7 +239,7 @@ void	synchronize_launch(t_philo *philo)
 	int	nb;
 	
 	nb = philo->nb_philo;
-	usleep((300 * (nb - 1)));
+	usleep((150 * (nb - 1)));
 }
 
 int	is_dead(t_philo *philo)
@@ -308,7 +308,7 @@ void	case_one(t_philo *philo)
 	
 	time = philo->time;
 	current_time = get_time() - time;
-	pthread_mutex_lock(philo->l_fork);
+	pthread_mutex_lock(philo->l_fork);//quitter le thread pas le programme
 	print_messages(philo, "has taken a fork\n");
 	while (current_time < philo->death_time)
 	{
@@ -373,9 +373,6 @@ void	*routine(void *arg)
 
 	philo = (t_philo *)arg;
 	synchronize_launch(philo);
-	philo->time = get_time();
-	printf("temps de depart : %lld\n", philo->time);
-	return (NULL);
 	set_death_time(philo);
 	if (check_init(philo))
 		return (NULL);
