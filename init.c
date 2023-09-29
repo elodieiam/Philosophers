@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/28 16:47:50 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/29 14:51:37 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,18 +39,16 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 {
 	int		i;
 	int		nb;
-	//bool	*status;
 	static bool 	status;
 	static int		init_check;
 	long long		time;
 
-	i = 0;
+	i = -1;
 	nb = ft_atoi(av[1]);
-	//status = malloc(sizeof(bool));
 	status = alive;
 	init_check = 0;
 	time = get_time();
-	while (i < nb)
+	while (++i < nb)
 	{
 		(*philos)[i].ID = 0;
 		(*philos)[i].pos = i + 1;
@@ -65,10 +63,8 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		(*philos)[i].status = &status;
 		(*philos)[i].death_time = 0;
 		(*philos)[i].meals_eaten = 0;
-		(*philos)[i].time = time;
-		(*philos)[i].personal_status = 0;
+		(*philos)[i].time = time + (1 * nb);//1 ms est suffisante pr lancer un thread, c'est le temps de depart dans le futur de tous les philos
 		(*philos)[i].init_check = &init_check;
-		i++;
 	}
 	return (1);
 }

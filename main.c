@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/28 17:03:58 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/09/29 15:01:05 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,9 +237,12 @@ int	think(t_philo *philo)
 void	synchronize_launch(t_philo *philo)
 {
 	int	nb;
-	
+
 	nb = philo->nb_philo;
-	usleep((150 * (nb - 1)));
+	while (philo->time > get_time()) //on attend tant que le futur rattrape le present
+	{
+		usleep(500);
+	}
 }
 
 int	is_dead(t_philo *philo)
@@ -286,7 +289,7 @@ void	set_death_time(t_philo *philo)
 {
 	long long	time;
 	long long	current_time;
-	
+
 	time = philo->time;
 	current_time = get_time();
 	philo->death_time = (current_time - time) + philo->time_die;
@@ -316,7 +319,7 @@ void	case_one(t_philo *philo)
 		current_time = get_time() - time;
 	}
 	pthread_mutex_unlock(philo->l_fork);
-	print_messages(philo, "has died\n");
+	print_messages(philo, "died\n");
 	
 }
 
@@ -329,7 +332,7 @@ int	check_init(t_philo *philo)
 	return (0);
 }
 
-void	philo_odd_waits(t_philo *philo, int to_wait)
+int	philo_odd_waits(t_philo *philo, int to_wait)
 {
 	long long	time;
 	long long	current_time;
@@ -339,32 +342,41 @@ void	philo_odd_waits(t_philo *philo, int to_wait)
 	while ((current_time - time) < to_wait)
 	{
 		if (is_dead(philo))
-			return ;
+			return (1);
 		usleep(500); 
 		current_time = get_time();
 	}
 	while ((philo->l_fork)->__align)
 	{
 		if (is_dead(philo))
-			return ;
+			return (1);
 		usleep(500);
 	}
+	return (0);
 }
 
 /* on fait attendre les philos impairs 
 les impairs classiques attendent "time to eat", le temps que les pairs mangent
 le dernier impair attend le temps qu'ils mangent + moitié du temps qu'ils mangent
 pr laisser le temps aux autres impairs de commencer à manger sans interférence*/
-void	lauch_odd_philos(t_philo *philo)
+int	lauch_odd_philos(t_philo *philo)
 {
 	int	nb_philo;
 
 	nb_philo = philo->nb_philo;
 	print_messages(philo, "is thinking\n");
 	if ((nb_philo % 2) && (philo->pos == nb_philo)) //si nb philo impair et que c'est le dernier philo
-		philo_odd_waits(philo, (philo->time_eat + philo->time_eat / 2));
+	{
+		if (philo_odd_waits(philo, (philo->time_eat + philo->time_eat / 2)))
+			return (1);
+		
+	}
 	else if (philo->pos % 2)
-		philo_odd_waits(philo, philo->time_eat);
+	{
+		if (philo_odd_waits(philo, philo->time_eat))
+			return (1);
+	}
+	return (0);
 }
 
 void	*routine(void *arg)
@@ -372,8 +384,16 @@ void	*routine(void *arg)
 	t_philo	*philo;
 
 	philo = (t_philo *)arg;
+	//printf("before %lld\n", get_time() - philo->time);
+	// printf("%lld = philo time et %lld : current time\n", philo->time, get_time());
+	
 	synchronize_launch(philo);
+	//printf("start: %lld\n", get_time() - (philo->time));
+	//petit decalage dans set death time car on recalcule get_time a chque fois
+	
 	set_death_time(philo);
+
+	
 	if (check_init(philo))
 		return (NULL);
 	if (philo->nb_philo == 1)
@@ -383,12 +403,8 @@ void	*routine(void *arg)
 	}
 	if (philo->pos % 2)
 	{
-		lauch_odd_philos(philo);
-		if (is_dead(philo))
-		{
-			//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
+		if (lauch_odd_philos(philo))
 			return (NULL);
-		}
 	}
 	while (!is_dead(philo) && !are_fed(philo))
 	{
