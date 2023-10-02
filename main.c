@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/02 15:37:05 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/02 17:38:14 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 				pthread_mutex_unlock((philo->r_fork));
 				return (1);
 			}
-			usleep(500);
+			usleep(10);
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
@@ -92,7 +92,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 		{
 			if (is_dead(philo))
 				return (1);
-			usleep(500);
+			usleep(100);
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
@@ -108,7 +108,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 				pthread_mutex_unlock((philo->l_fork));
 				return (1);
 			}
-			usleep(500);
+			usleep(10);
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
@@ -258,7 +258,7 @@ int	think(t_philo *philo)
 	{
 	//printf("impair %lld < %lld\n", get_time() - philo->time, philo->last_meal + (philo->time_eat * 2 + philo->time_eat /2));
 		
-		while (get_time() - philo->time < philo->last_meal + philo->time_eat / 2)
+		while (get_time() - philo->time < philo->last_meal + philo->time_eat)
 		{
 			if (is_dead(philo))
 				return (1);
