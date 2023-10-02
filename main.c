@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/02 17:38:14 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/02 19:27:57 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,12 +55,12 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 	drop des forks qui n'ont pas été prises*/
 	if (philo->pos % 2 == 0)
 	{
-		while ((philo->r_fork)->__align)
+		while ((philo->r_fork)->__align && philo->l_fork)
 		{
 			//printf("Passe\n");
 			if (is_dead(philo))
 				return (1);
-			usleep(500);
+			usleep(100);
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
@@ -76,7 +76,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 				pthread_mutex_unlock((philo->r_fork));
 				return (1);
 			}
-			usleep(10);
+			usleep(5);
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
@@ -108,7 +108,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 				pthread_mutex_unlock((philo->l_fork));
 				return (1);
 			}
-			usleep(10);
+			usleep(5);
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
