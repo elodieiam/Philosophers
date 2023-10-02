@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/02 19:27:57 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/02 21:12:06 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,12 +55,12 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 	drop des forks qui n'ont pas été prises*/
 	if (philo->pos % 2 == 0)
 	{
-		while ((philo->r_fork)->__align && philo->l_fork)
+		while ((philo->r_fork)->__align)
 		{
 			//printf("Passe\n");
 			if (is_dead(philo))
 				return (1);
-			usleep(100);
+			usleep(50);
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
@@ -69,6 +69,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 			pthread_mutex_unlock((philo->r_fork));
 			return (1);
 		}
+			
 		while (philo->l_fork->__align)
 		{
 			if (is_dead(philo))
@@ -92,7 +93,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 		{
 			if (is_dead(philo))
 				return (1);
-			usleep(100);
+			usleep(50);
 		}
 		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
@@ -106,7 +107,7 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 			if (is_dead(philo))
 			{
 				pthread_mutex_unlock((philo->l_fork));
-				return (1);
+				return (5);
 			}
 			usleep(5);
 		}
@@ -334,12 +335,7 @@ int	is_dead(t_philo *philo)
 
 void	set_death_time(t_philo *philo)
 {
-	long long	time;
-	long long	current_time;
-
-	time = philo->time;
-	current_time = get_time();
-	philo->death_time = (current_time - time) + philo->time_die;
+	philo->death_time = get_time() - philo->time + philo->time_die;
 }
 
 int	are_fed(t_philo *philo)
@@ -421,11 +417,9 @@ void	*routine(void *arg)
 	synchronize_launch(philo);
 	//petit decalage dans set death time car on recalcule get_time a chque fois
 	set_death_time(philo);
-	
 	if (check_init(philo))
 		return (NULL);
-	// printf("%lld\n", get_time() - philo->time);
-	// return (NULL);
+	
 	if (philo->nb_philo == 1)
 	{
 		case_one(philo);
@@ -438,6 +432,8 @@ void	*routine(void *arg)
 	}
 	while (!is_dead(philo) && !are_fed(philo))
 	{
+	// 	printf("%lld debut %d\n", get_time() - philo->time, philo->pos);
+	// return (NULL);
 		if (pick_forks(philo))
 			return (NULL);
 		if (eat(philo))
