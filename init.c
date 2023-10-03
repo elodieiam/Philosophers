@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/29 21:08:26 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/03 17:00:28 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		(*philos)[i].status = &status;
 		(*philos)[i].death_time = 0;
 		(*philos)[i].meals_eaten = 0;
-		(*philos)[i].time = time + (1 * nb);//1 ms est suffisante pr lancer un thread, c'est le temps de depart dans le futur de tous les philos
+		(*philos)[i].time = time;//1 ms est suffisante pr lancer un thread, c'est le temps de depart dans le futur de tous les philos
 		(*philos)[i].init_check = &init_check;
 		(*philos)[i].last_meal = 0;
 	}

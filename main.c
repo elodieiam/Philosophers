@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/02 21:12:06 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/03 17:23:44 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,9 +107,9 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 			if (is_dead(philo))
 			{
 				pthread_mutex_unlock((philo->l_fork));
-				return (5);
+				return (1);
 			}
-			usleep(5);
+			usleep(50);
 		}
 		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
@@ -240,42 +240,36 @@ int	think(t_philo *philo)
 {
 	if (print_messages(philo, "is thinking\n"))
 		return (1);
-	if (philo->pos % 2 == 0)
-	{
-		
-		//printf("pair %lld < %lld\n", get_time() - philo->time, philo->last_meal + (philo->time_eat + philo->time_eat /2));
-		while (get_time() - philo->time < philo->last_meal + philo->time_eat / 2)
-		{
-			//printf("passeeeeee\n");
-
-			if (is_dead(philo))
-				return (1);
-			usleep(500);
-		}
-		//aussi pour les impairs est-ce que le temps ecoule depuis last meal > eat time + eat_time / 2? si oui, je peux prendre ma fourchette ? (si nb philo pair), si impair = 2.5, en attendant usleep(50) comme dhab + check is dead comme dhab
-
-	}
-	else
-	{
-	//printf("impair %lld < %lld\n", get_time() - philo->time, philo->last_meal + (philo->time_eat * 2 + philo->time_eat /2));
-		
-		while (get_time() - philo->time < philo->last_meal + philo->time_eat)
-		{
-			if (is_dead(philo))
-				return (1);
-			usleep(500);
-		}
-		while ((philo->l_fork)->__align)
-		{
-			if (is_dead(philo))
-				return (1);
-			usleep(500);
-		}
-	}
-	// if ((philo->nb_philo % 2) && (philo->pos == philo->nb_philo)) //si nb philo impair et que c'est le dernier philo
+	// if ((philo->nb_philo % 2 == 0)  || philo->time_die >= 2 * philo->time_eat - philo->time_sleep)
+	// 	usleep(philo->time_eat-philo->time_sleep + 1);
+	// else
+	// 	usleep(philo->death_time);
+	// if (philo->pos % 2 == 0)
 	// {
-	// 		//printf("%lld last meal et %lld time to wait\n", get_time() - philo->time,  philo->last_meal + (philo->time_eat * 2 + (philo->time_eat / 2)));
-	// 	while (get_time() - philo->time < philo->last_meal + (philo->time_eat * 2 + (philo->time_eat / 2)))
+		
+	// 	//printf("pair %lld < %lld\n", get_time() - philo->time, philo->last_meal + (philo->time_eat + philo->time_eat /2));
+	// 	while (get_time() - philo->time < philo->last_meal + philo->time_eat / 2)
+	// 	{
+	// 		//printf("passeeeeee\n");
+
+	// 		if (is_dead(philo))
+	// 			return (1);
+	// 		usleep(500);
+	// 	}
+	// 	//aussi pour les impairs est-ce que le temps ecoule depuis last meal > eat time + eat_time / 2? si oui, je peux prendre ma fourchette ? (si nb philo pair), si impair = 2.5, en attendant usleep(50) comme dhab + check is dead comme dhab
+
+	// }
+	// else
+	// {
+	// //printf("impair %lld < %lld\n", get_time() - philo->time, philo->last_meal + (philo->time_eat * 2 + philo->time_eat /2));
+		
+	// 	while (get_time() - philo->time < philo->last_meal + philo->time_eat)
+	// 	{
+	// 		if (is_dead(philo))
+	// 			return (1);
+	// 		usleep(500);
+	// 	}
+	// 	while ((philo->l_fork)->__align)
 	// 	{
 	// 		if (is_dead(philo))
 	// 			return (1);
@@ -414,7 +408,7 @@ void	*routine(void *arg)
 
 	philo = (t_philo *)arg;
 	
-	synchronize_launch(philo);
+	//synchronize_launch(philo);
 	//petit decalage dans set death time car on recalcule get_time a chque fois
 	set_death_time(philo);
 	if (check_init(philo))
@@ -427,8 +421,10 @@ void	*routine(void *arg)
 	}
 	if (philo->pos % 2)
 	{
-		if (lauch_odd_philos(philo))
-			return (NULL);
+		print_messages(philo, "is thinking\n");
+		if (philo->nb_philo % 2 && philo->pos == philo->nb_philo)
+			usleep(philo->time_eat + philo->time_eat / 2);
+		usleep(philo->time_eat);
 	}
 	while (!is_dead(philo) && !are_fed(philo))
 	{
@@ -452,6 +448,8 @@ void	*routine(void *arg)
 		// 	return (NULL);
 		if (think(philo))
 			return (NULL);
+		if (philo->nb_philo % 2 != 0)
+			usleep(100);
 	}
 	//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
 	return (NULL);
