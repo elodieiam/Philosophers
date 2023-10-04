@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/03 17:00:28 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 11:54:22 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,9 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		(*philos)[i].ID = 0;
 		(*philos)[i].pos = i + 1;
 		(*philos)[i].nb_philo = ft_atoi(av[1]);
-		(*philos)[i].time_die = ft_atoi(av[2]);
-		(*philos)[i].time_eat = ft_atoi(av[3]);
-		(*philos)[i].time_sleep = ft_atoi(av[4]);
+		(*philos)[i].time_die = ft_atoi(av[2]) * 1000;
+		(*philos)[i].time_eat = ft_atoi(av[3]) * 1000;
+		(*philos)[i].time_sleep = ft_atoi(av[4]) * 1000;
 		if (ac == 6)
 			(*philos)[i].number_meals = ft_atoi(av[5]);
 		else
@@ -66,7 +66,33 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		(*philos)[i].time = time;//1 ms est suffisante pr lancer un thread, c'est le temps de depart dans le futur de tous les philos
 		(*philos)[i].init_check = &init_check;
 		(*philos)[i].last_meal = 0;
-	}
+		if (nb == 3)
+		{
+			if (i % 2 == 0)
+				(*philos)[i].sync = 500;
+			else
+				(*philos)[i].sync = 1000; 			
+		}
+		else if (nb % 2 != 0 && i % 2 == 0)
+			(*philos)[i].sync = 1000;
+		else if (nb % 2 == 0)
+			(*philos)[i].sync = 500;
+		else
+			(*philos)[i].sync = 0;
+		if (nb % 2 != 0)
+		{
+			if ((*philos)[i].time_eat * 3 <= (*philos)[i].time_die && (*philos)[i].time_sleep < (*philos)[i].time_eat)
+				(*philos)[i].sync += (*philos)[i].time_eat - (*philos)[i].time_sleep;
+			else if ((*philos)[i].time_eat * 3 > (*philos)[i].time_die && ((*philos)[i].time_sleep + (*philos)[i].time_eat) < (*philos)[i].time_die)
+				(*philos)[i].sync += (*philos)[i].time_die - ((*philos)[i].time_eat + (*philos)[i].time_sleep);
+		}
+		else
+		{
+			if ((*philos)[i].time_eat * 2 > (*philos)[i].time_die && ((*philos)[i].time_sleep + (*philos)[i].time_eat) < (*philos)[i].time_die)
+				(*philos)[i].sync += (*philos)[i].time_die - ((*philos)[i].time_eat + (*philos)[i].time_sleep);
+		}
+			
+		}
 	return (1);
 }
 

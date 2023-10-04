@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/29 21:08:05 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 11:20:33 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,9 @@ typedef struct s_philo
 	pthread_mutex_t *write;
 	int				pos;
 	int				nb_philo;
-	int				time_die;
-	int				time_eat;
-	int				time_sleep;
+	long long				time_die;
+	long long			time_eat;
+	long long				time_sleep;
 	int				number_meals;
 	bool			*status;
 	long long		death_time;
@@ -40,6 +40,7 @@ typedef struct s_philo
 	int				meals_eaten;
 	long long		time;
 	int				*init_check;
+	int 			sync;
 } t_philo;
 
 long long	ft_atoi(const char *str);

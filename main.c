@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/03 17:23:44 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 12:17:10 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ long long	get_time(void)
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
-	return ((tv.tv_sec * 1000000 + tv.tv_usec) / 1000);
+	return ((tv.tv_sec * 1000000) + (tv.tv_usec / 1000) * 1000);
 	//return ((tv.tv_sec * 1000000 + ((tv.tv_usec / 1000) * 1000)));
 }
 
@@ -55,31 +55,30 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 	drop des forks qui n'ont pas été prises*/
 	if (philo->pos % 2 == 0)
 	{
-		while ((philo->r_fork)->__align)
-		{
-			//printf("Passe\n");
-			if (is_dead(philo))
-				return (1);
-			usleep(50);
-		}
-		if (pthread_mutex_lock((philo->r_fork)))
+		// while ((philo->r_fork)->__align)
+		// {
+		// 	if (is_dead(philo))
+		// 		return (1);
+		// 	usleep(50);
+		// }
+		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
 		if (print_messages(philo, "has taken a fork\n"))
 		{
-			pthread_mutex_unlock((philo->r_fork));
+			pthread_mutex_unlock((philo->l_fork));
 			return (1);
 		}
 			
-		while (philo->l_fork->__align)
-		{
-			if (is_dead(philo))
-			{
-				pthread_mutex_unlock((philo->r_fork));
-				return (1);
-			}
-			usleep(5);
-		}
-		if (pthread_mutex_lock((philo->l_fork)))
+		// while (philo->l_fork->__align)
+		// {
+		// 	if (is_dead(philo))
+		// 	{
+		// 		pthread_mutex_unlock((philo->r_fork));
+		// 		return (1);
+		// 	}
+		// 	usleep(50);
+		// }
+		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		if (print_messages(philo, "has taken a fork\n"))
 		{
@@ -89,29 +88,29 @@ int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
 	}
 	else
 	{
-		while ((philo->l_fork)->__align)
-		{
-			if (is_dead(philo))
-				return (1);
-			usleep(50);
-		}
-		if (pthread_mutex_lock((philo->l_fork)))
+		// while ((philo->l_fork)->__align)
+		// {
+		// 	if (is_dead(philo))
+		// 		return (1);
+		// 	usleep(50);
+		// }
+		if (pthread_mutex_lock((philo->r_fork)))
 			printf("error\n");
 		if (print_messages(philo, "has taken a fork\n"))
 		{
-			pthread_mutex_unlock((philo->l_fork));
+			pthread_mutex_unlock((philo->r_fork));
 			return (1);
 		}
-		while (philo->r_fork->__align)
-		{
-			if (is_dead(philo))
-			{
-				pthread_mutex_unlock((philo->l_fork));
-				return (1);
-			}
-			usleep(50);
-		}
-		if (pthread_mutex_lock((philo->r_fork)))
+		// while (philo->r_fork->__align)
+		// {
+		// 	if (is_dead(philo))
+		// 	{
+		// 		pthread_mutex_unlock((philo->l_fork));
+		// 		return (1);
+		// 	}
+		// 	usleep(50);
+		// }
+		if (pthread_mutex_lock((philo->l_fork)))
 			printf("error\n");
 		if (print_messages(philo, "has taken a fork\n"))
 		{
@@ -151,50 +150,56 @@ int	print_messages(t_philo *philo, char *str)
 		return (1);
 	}
 	pthread_mutex_lock(philo->write);
-	printf("%lld %d %s\n",  get_time() - philo->time, philo->pos, str);
+	printf("%lld %d %s\n",  (get_time() - philo->time) / 1000, philo->pos, str);
 	pthread_mutex_unlock(philo->write);
 	pthread_mutex_unlock(philo->lock_philo);
 	return (0);
+	//important de garder les mutex dans cet ordre sinon msg affichés après la mort d'un philo
 }
 
 int	ft_sleep(t_philo *philo)
 {
-	long long	time;
-	long long	current_time;
-	long long	arrival_time;
 
-	time = philo->time;
-	current_time = get_time();
-	arrival_time = current_time - time + philo->time_sleep;
+	long long	current;
+	long long	time_end_sleeping;
+	long long	time_of_death;
+
+	current = get_time();
+	time_end_sleeping = get_time() + philo->time_sleep;
+	time_of_death = philo->last_meal + philo->time_die;
 	//tant que le moment où on en est dans le prog est < au moment où on doit en être avant que le philo finisse de manger
-	while ((current_time - time) < (arrival_time))
+	while (current < time_end_sleeping)
 	{
-		/*je reste dans le while tant que < et je checke dans le if >=
-		ça n'arrivera donc jamais. Ce n'est pas ça qu'il faut vérifier.*/
-		if (is_dead(philo))
-			return (1);
-		usleep(500); //50 micro = 5ms
-		current_time = get_time();
+		usleep(330); //50 micro = 5ms
+		current = get_time();
+		if (current > time_of_death)
+		{
+			if (is_dead(philo))
+				return (1);	
+		}
 	}
 	return (0);
 }
 
 int	my_usleep(t_philo *philo)
 {
-	long long	time;
-	long long	current_time;
-	long long	arrival_time;
-	
-	time = philo->time;
-	current_time = get_time();
-	arrival_time = current_time - time + philo->time_eat;
+	long long	current;
+	long long	time_end_eating;
+	long long	time_of_death;
+
+	current = get_time();
+	time_end_eating = get_time() + philo->time_eat;
+	time_of_death = philo->last_meal + philo->time_die;
 	//tant que le moment où on en est dans le prog est < au moment où on doit en être avant que le philo finisse de manger
-	while ((current_time - time) < (arrival_time))
+	while (current < time_end_eating)
 	{
-		if (is_dead(philo))
-			return (1);
-		usleep(500); //50 micro = 5ms
-		current_time = get_time();
+		usleep(330); //50 micro = 5ms
+		current = get_time();
+		if (current > time_of_death)
+		{
+			if (is_dead(philo))
+				return (1);	
+		}
 	}
 	return (0);
 }
@@ -206,24 +211,22 @@ int	eat(t_philo *philo)
 	// 	drop_forks(philo);
 	// 	return (1);
 	// }
-	philo->death_time = (get_time() - philo->time) + philo->time_die;
 	//printf("philo n %d death time : %lld\n", philo->pos, philo->death_time);
-	philo->last_meal = (get_time() - philo->time);
 	if (print_messages(philo, "is eating\n"))
 	{
 		drop_forks(philo);
 		return (1);
 	}
+	//philo->death_time = (get_time() - philo->time) + philo->time_die;
+	philo->last_meal = get_time();
+	if (philo->number_meals != -1)
+		philo->meals_eaten += 1;
 	if (my_usleep(philo)) //recoder usleep car pas aasez precis, faire plein de miniusleep + checker en même temps la mort
 	{
 		drop_forks(philo);
 		return (1);
 	}
-	drop_forks(philo);
-	if (is_dead(philo))
-			return (1);
-	if (philo->number_meals != -1)
-		philo->meals_eaten += 1;
+	drop_forks(philo);	
 	return (0);
 }
 
@@ -240,6 +243,17 @@ int	think(t_philo *philo)
 {
 	if (print_messages(philo, "is thinking\n"))
 		return (1);
+	// if (philo->pos % 2 == 0)
+	// {
+	// 	while (get_time() - philo->time < philo->last_meal + philo->time_eat / 2)
+	// 	{
+	// 		//printf("passeeeeee\n");
+
+	// 		if (is_dead(philo))
+	// 			return (1);
+	// 		usleep(50);
+	// 	}
+	// }
 	// if ((philo->nb_philo % 2 == 0)  || philo->time_die >= 2 * philo->time_eat - philo->time_sleep)
 	// 	usleep(philo->time_eat-philo->time_sleep + 1);
 	// else
@@ -289,37 +303,20 @@ void	synchronize_launch(t_philo *philo)
 
 int	is_dead(t_philo *philo)
 {
-	long long	current_time;
 	long long	time;
 
-	pthread_mutex_lock(philo->lock_philo);
-	if (*(philo->status) == dead)
-	{
-		pthread_mutex_unlock(philo->lock_philo);
-		return (1);
-	}
-	pthread_mutex_unlock(philo->lock_philo);
-	current_time = get_time();
-	time = current_time - (philo->time);
-	/*si on constate que notre philo est mort, il faut lock le statut général
-	on doit lock nest le mutex sur write car sinon ce mutex
-	peut être lock par qqn d'autre qui constate la mort d'un philo mais n'affiche rien
-	car on vérifie avant d'afficher dans print_messages si un philo est mort*/
-	if (philo->death_time < get_time() - philo->time)
+	time = get_time() - philo->last_meal;
+		//printf("%lld > %lld\n", time, philo->time_die);
+	if (time > philo->time_die)
 	{
 		pthread_mutex_lock(philo->lock_philo);
-		//sinon plusieurs philos peuvent entrer et mettre le statut à 'dead' alors que l'un d'eux est déjà mort
-		if(*(philo->status) == dead)
+		if (!(*(philo->status)))
 		{
-			pthread_mutex_unlock(philo->lock_philo);
-			return (1);
+			(*(philo->status)) = dead;
+			pthread_mutex_lock(philo->write);
+			printf("%lld %d died\n", (get_time() - philo->time) / 1000, philo->pos);
+			pthread_mutex_unlock(philo->write);
 		}
-		*(philo->status) = dead;
-		pthread_mutex_lock(philo->write);
-		// current_time = get_time();
-		// time = current_time - (philo->time);
-		printf("%lld %d a philo died\n", time, philo->pos);
-		pthread_mutex_unlock(philo->write);
 		pthread_mutex_unlock(philo->lock_philo);
 		return (1);
 	}
@@ -402,6 +399,15 @@ int	lauch_odd_philos(t_philo *philo)
 	return (0);
 }
 
+void	usleep_after_thinking(int delay)
+{
+	long long	time_now;
+
+	time_now = get_time();
+	while (get_time() - time_now < delay)
+		usleep(50);
+}
+
 void	*routine(void *arg)
 {
 	t_philo	*philo;
@@ -410,26 +416,43 @@ void	*routine(void *arg)
 	
 	//synchronize_launch(philo);
 	//petit decalage dans set death time car on recalcule get_time a chque fois
-	set_death_time(philo);
-	if (check_init(philo))
-		return (NULL);
+	//set_death_time(philo);
 	
+	// if (check_init(philo))
+	// 	return (NULL);
 	if (philo->nb_philo == 1)
 	{
 		case_one(philo);
 		return (NULL);
 	}
-	if (philo->pos % 2)
+	// if (philo->pos % 2)
+	// {
+	// 	print_messages(philo, "is thinking\n");
+	// 	// if (philo->nb_philo % 2 && philo->pos == philo->nb_philo)
+	// 	// 	usleep(philo->time_eat + philo->time_eat / 2);
+	// 	usleep(philo->time_eat);
+	// }
+	// philo->time += philo->nb_philo * 1000;
+	// while (get_time() < philo->time)
+	// 	usleep(1000);
+	philo->last_meal = 0;
+	philo->time = philo->time + (philo->nb_philo * 1000);
+	
+	while (get_time() < philo->time)
 	{
-		print_messages(philo, "is thinking\n");
-		if (philo->nb_philo % 2 && philo->pos == philo->nb_philo)
-			usleep(philo->time_eat + philo->time_eat / 2);
-		usleep(philo->time_eat);
+		// printf("%lld et current : %lld\n", philo->time, get_time());
+		usleep(1000);
 	}
-	while (!is_dead(philo) && !are_fed(philo))
+	philo->last_meal = get_time();
+	print_messages(philo, "is thinking\n");
+	if (philo->nb_philo % 2 == 0 && philo->pos % 2 != 0)
+		usleep(philo->time_eat / 2);
+	else if (philo->nb_philo % 2 != 0 && philo->pos % 2 == 0)
+		usleep(philo->time_eat / 2);
+	while (!is_dead(philo))
 	{
 	// 	printf("%lld debut %d\n", get_time() - philo->time, philo->pos);
-	// return (NULL);
+	// return (NULL);\n
 		if (pick_forks(philo))
 			return (NULL);
 		if (eat(philo))
@@ -440,16 +463,19 @@ void	*routine(void *arg)
 		{
 			return (NULL);
 		}
-		if (is_dead(philo))
-			return (NULL);
+		// if (is_dead(philo))
+		// 	return (NULL);
 		if (sleeping(philo))
 			return (NULL);
 		// if (is_dead(philo)) //est-ce utile ?
 		// 	return (NULL);
 		if (think(philo))
 			return (NULL);
-		if (philo->nb_philo % 2 != 0)
-			usleep(100);
+		// if (philo->pos % 2)
+		// {
+		// 	usleep(100);
+		// }
+		usleep_after_thinking(philo->sync);
 	}
 	//printf("%d ate %d time\n", philo->pos, philo->meals_eaten);
 	return (NULL);
