@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 11:54:22 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 15:10:50 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,11 @@ int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
 	while (i < nb)
 	{
 		//clockwise
+		if (i == 0 && nb == 1)
+		{
+			(*philos)[i].l_fork = (*forks);
+			(*philos)[i].r_fork = NULL;
+		}
 		if (i == 0)
 		{
 			(*philos)[i].l_fork = (*forks);//l_fork du 0 = sa propre fork ([0])

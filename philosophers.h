@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 11:20:33 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 15:00:30 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ int	init_forks(char **av, pthread_mutex_t **forks);
 int	init_variables(char **av, int ac, pthread_mutex_t **forks, t_philo **philos);
 long long	get_time(void);
 
-void	join_threads(t_philo **philos, int nb);
+void	join_threads(t_philo *philos, int nb);
 int	pick_forks(t_philo *philo);
 void	drop_forks(t_philo *philo);
 int	print_messages(t_philo *philo, char *message);
