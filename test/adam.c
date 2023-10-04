@@ -1,6 +1,12 @@
 #include <pthread.h>
 #include <stdio.h>
 
+int	*f(void)
+{
+	static int var;
+	return (&var); 
+}
+
 void	*test(void	*ptr)
 {
 	pthread_mutex_t	*mtx;

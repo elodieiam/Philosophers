@@ -6,23 +6,11 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 15:39:53 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 17:25:53 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
-
-/*"substitut" de variable globale
-A chaque fois qu'on appelle cette fonction, on obtient l'adresse de la variable
-On peut donc accéder à la même variable partout pr voir sa valeur et/ou la modifier
-Les variables booléennes sont initialisées à 'faux' par défaut 
-Voir test2.c
-*/
-int	*f(void)
-{
-	static int var;
-	return (&var); 
-}
 
 void	free_mutex(char **av, pthread_mutex_t **forks)
 {
@@ -39,87 +27,64 @@ void	free_mutex(char **av, pthread_mutex_t **forks)
 
 long long	get_time(void)
 {
-	struct timeval tv;
+	struct timeval	tv;
 
 	gettimeofday(&tv, NULL);
 	return ((tv.tv_sec * 1000000) + (tv.tv_usec / 1000) * 1000);
-	//return ((tv.tv_sec * 1000000 + ((tv.tv_usec / 1000) * 1000)));
 }
 
 
-int	pick_forks(t_philo *philo) //return 1 si mort, 0 si pas mort
+int	pick_forks_even(t_philo *philo)
 {
-	/*la fonction peut return sous plusieurs conditions
-	soit on a réussi à prendre des forks, auquel cas si qqn meurt dans routine on les drop
-	mais elle peut aussi return avant d'avoir réussi à prendre les fourchettes, auqel cas on essaye ensuite de 
-	drop des forks qui n'ont pas été prises*/
+	if (pthread_mutex_lock((philo->l_fork)))
+		printf("error\n");
+	if (print_messages(philo, "has taken a fork\n"))
+	{
+		pthread_mutex_unlock((philo->l_fork));
+		return (1);
+	}
+	if (pthread_mutex_lock((philo->r_fork)))
+		printf("error\n");
+	if (print_messages(philo, "has taken a fork\n"))
+	{
+		drop_forks(philo);
+		return (1);	
+	}
+	return (0);
+}
+
+int	pick_forks_odd(t_philo *philo)
+{
+	if (pthread_mutex_lock((philo->r_fork)))
+		printf("error\n");
+	if (print_messages(philo, "has taken a fork\n"))
+	{
+		pthread_mutex_unlock((philo->r_fork));
+		return (1);
+	}
+	if (pthread_mutex_lock((philo->l_fork)))
+		printf("error\n");
+	if (print_messages(philo, "has taken a fork\n"))
+	{
+		drop_forks(philo);
+		return (1);
+	}
+	return (0);
+}
+
+int	pick_forks(t_philo *philo)
+{
 	if (philo->pos % 2 == 0)
 	{
-		// while ((philo->r_fork)->__align)
-		// {
-		// 	if (is_dead(philo))
-		// 		return (1);
-		// 	usleep(50);
-		// }
-		if (pthread_mutex_lock((philo->l_fork)))
-			printf("error\n");
-		if (print_messages(philo, "has taken a fork\n"))
-		{
-			pthread_mutex_unlock((philo->l_fork));
+		if (pick_forks_even(philo))
 			return (1);
-		}
-			
-		// while (philo->l_fork->__align)
-		// {
-		// 	if (is_dead(philo))
-		// 	{
-		// 		pthread_mutex_unlock((philo->r_fork));
-		// 		return (1);
-		// 	}
-		// 	usleep(50);
-		// }
-		if (pthread_mutex_lock((philo->r_fork)))
-			printf("error\n");
-		if (print_messages(philo, "has taken a fork\n"))
-		{
-			drop_forks(philo);
-			return (1);	
-		}
 	}
 	else
 	{
-		// while ((philo->l_fork)->__align)
-		// {
-		// 	if (is_dead(philo))
-		// 		return (1);
-		// 	usleep(50);
-		// }
-		if (pthread_mutex_lock((philo->r_fork)))
-			printf("error\n");
-		if (print_messages(philo, "has taken a fork\n"))
-		{
-			pthread_mutex_unlock((philo->r_fork));
+		if (pick_forks_odd(philo))
 			return (1);
-		}
-		// while (philo->r_fork->__align)
-		// {
-		// 	if (is_dead(philo))
-		// 	{
-		// 		pthread_mutex_unlock((philo->l_fork));
-		// 		return (1);
-		// 	}
-		// 	usleep(50);
-		// }
-		if (pthread_mutex_lock((philo->l_fork)))
-			printf("error\n");
-		if (print_messages(philo, "has taken a fork\n"))
-		{
-			drop_forks(philo);
-			return (1);
-		}
-	}//btw on ne vérifie pas la mort entre chaque prise de fork car si l'une est dispo alors l'autre l'est forcément car on inverse
-	//la prise et la dépose de fourchette entre pairs et impairs
-	return (0); //il n'y a qu'ici qu'on est sûr que le philo a bien ses 2 fourchettes en main
+	}
+	return (0);
 }
 
 void	drop_forks(t_philo *philo)
@@ -136,13 +101,10 @@ void	drop_forks(t_philo *philo)
 	}
 }
 
-
 int	print_messages(t_philo *philo, char *str)
 {
-	//long long	time = get_time() - philo->time;
 	if (is_dead(philo))
 		return (1);
-	//lock le mutex philo ici dans certains cas, une mort a eu lieu mais on ne la voit pas car on a un léger temps d'attente pour verrouiller write donc on affiche le msg quand meme, qq ms après la mort
 	pthread_mutex_lock(philo->lock_philo);
 	if (*(philo->status) == dead)
 	{
@@ -150,11 +112,10 @@ int	print_messages(t_philo *philo, char *str)
 		return (1);
 	}
 	pthread_mutex_lock(philo->write);
-	printf("%lld %d %s\n",  (get_time() - philo->time) / 1000, philo->pos, str);
+	printf("%lld %d %s\n", (get_time() - philo->time) / 1000, philo->pos, str);
 	pthread_mutex_unlock(philo->write);
 	pthread_mutex_unlock(philo->lock_philo);
 	return (0);
-	//important de garder les mutex dans cet ordre sinon msg affichés après la mort d'un philo
 }
 
 int	ft_sleep(t_philo *philo, long time)
@@ -166,20 +127,18 @@ int	ft_sleep(t_philo *philo, long time)
 	current = get_time();
 	time_end = get_time() + time;
 	time_of_death = philo->last_meal + philo->time_die;
-	//tant que le moment où on en est dans le prog est < au moment où on doit en être avant que le philo finisse de manger
 	while (current < time_end)
 	{
-		usleep(330); //50 micro = 5ms
+		usleep(330);
 		current = get_time();
 		if (current > time_of_death)
 		{
 			if (is_dead(philo))
-				return (1);	
+				return (1);
 		}
 	}
 	return (0);
 }
-
 
 int	eat(t_philo *philo)
 {
@@ -191,12 +150,12 @@ int	eat(t_philo *philo)
 	philo->last_meal = get_time();
 	if (philo->number_meals != -1)
 		philo->meals_eaten += 1;
-	if (ft_sleep(philo, philo->time_eat)) //recoder usleep car pas aasez precis, faire plein de miniusleep + checker en même temps la mort
+	if (ft_sleep(philo, philo->time_eat))
 	{
 		drop_forks(philo);
 		return (1);
 	}
-	drop_forks(philo);	
+	drop_forks(philo);
 	return (0);
 }
 

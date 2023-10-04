@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 15:06:51 by elrichar          #+#    #+#             */
-/*   Updated: 2023/09/13 19:19:55 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 18:12:01 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,31 +100,16 @@ int	check_args(int ac, char **av)
 	if (ac == 5 || ac == 6)
 	{
 		if (!check_zero(av[1]))
-		{
-			printf("Error : only one philo.\n");
-			return (0);
-		}
+			return (printf("Error : only one philo.\n"), 0);
 		if (!check_is_number(ac, av))
-		{
-			printf("Error : arguments are not digits.\n");
-			return (0);
-		}
+			return (printf("Error : arguments are not digits.\n"), 0);
 		if (!check_is_int(ac, av))
-		{
-			printf("Error : arguments are not ints.\n");
-			return (0);
-		}
+			return (printf("Error : arguments are not ints.\n"), 0);
 		if (ac == 6 && !check_zero(av[5]))
-		{
-			printf("Error : philos must eat at least once.\n");
-			return (0);
-		}
+			return (printf("Error : philos must eat at least once.\n"), 0);
 		else
 			return (1);
 	}
 	else
-	{
-		printf("Error : number of arguments incorrect.\n");
-		return (0);
-	}
+		return (printf("Error : number of arguments incorrect.\n"), 0);
 }

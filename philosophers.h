@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 15:00:30 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/04 15:52:14 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ typedef struct s_philo
 	long long				time_sleep;
 	int				number_meals;
 	bool			*status;
-	long long		death_time;
 	long long		last_meal;
 	int				meals_eaten;
 	long long		time;
