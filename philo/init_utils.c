@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/05 11:30:46 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 12:02:58 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 12:40:08 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void	set_sync(int nb, int i, t_philo **philos)
 		if (i % 2 == 0)
 			(*philos)[i].sync = 500;
 		else
-			(*philos)[i].sync = 1000;	
+			(*philos)[i].sync = 1000;
 	}
 	else if (nb % 2 != 0 && i % 2 == 0)
 		(*philos)[i].sync = 1000;

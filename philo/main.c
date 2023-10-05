@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/05 11:45:30 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 12:02:58 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 16:25:25 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,8 @@ int	init_threads(t_philo *philos)
 	i = 0;
 	while (i < nb)
 	{
-		if (pthread_create(&(philos[i].thread_id), 0, routine, (void *)(&philos[i])))
+		if (pthread_create(&(philos[i].thread_id), 0, \
+		routine, (void *)(&philos[i])))
 		{
 			*(philos->init_check) = 1;
 			printf("Error : pthread_create failed\n");
