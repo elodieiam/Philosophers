@@ -6,71 +6,17 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 17:48:08 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 12:00:03 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	set_sync_2(int nb, int i, t_philo **philos)
-{
-	if (nb % 2 != 0)
-	{
-		if ((*philos)[i].time_eat * 3 <= (*philos)[i].time_die \
-			&& (*philos)[i].time_sleep < (*philos)[i].time_eat)
-			(*philos)[i].sync += (*philos)[i].time_eat - \
-			(*philos)[i].time_sleep;
-		else if ((*philos)[i].time_eat * 3 > (*philos)[i].time_die \
-			&& ((*philos)[i].time_sleep + (*philos)[i].time_eat) \
-			< (*philos)[i].time_die)
-			(*philos)[i].sync += (*philos)[i].time_die - \
-			((*philos)[i].time_eat + (*philos)[i].time_sleep);
-	}
-	else
-	{
-		if ((*philos)[i].time_eat * 2 > (*philos)[i].time_die \
-			&& ((*philos)[i].time_sleep + (*philos)[i].time_eat) \
-			< (*philos)[i].time_die)
-			(*philos)[i].sync += (*philos)[i].time_die - \
-			((*philos)[i].time_eat + (*philos)[i].time_sleep);
-	}
-}
-
-void	set_sync(int nb, int i, t_philo **philos)
-{
-	if (nb == 3)
-	{
-		if (i % 2 == 0)
-			(*philos)[i].sync = 500;
-		else
-			(*philos)[i].sync = 1000;	
-	}
-	else if (nb % 2 != 0 && i % 2 == 0)
-		(*philos)[i].sync = 1000;
-	else if (nb % 2 == 0)
-		(*philos)[i].sync = 500;
-	else
-		(*philos)[i].sync = 0;
-	set_sync_2(nb, i, philos);
-}
-
-void	set_common_vars(char **av, int i, t_philo **philos)
-{
-	(*philos)[i].ID = 0;
-	(*philos)[i].nb_philo = ft_atoi(av[1]);
-	(*philos)[i].time_die = ft_atoi(av[2]) * 1000;
-	(*philos)[i].time_eat = ft_atoi(av[3]) * 1000;
-	(*philos)[i].time_sleep = ft_atoi(av[4]) * 1000;
-	(*philos)[i].meals_eaten = 0;
-	(*philos)[i].last_meal = 0;
-	(*philos)[i].pos = i + 1;
-}
-
 int	init_data_philos(char **av, int ac, t_philo **philos)
 {
 	int				i;
 	int				nb;
-	static bool		status;
+	static t_bool	status;
 	static int		init_check;
 	long long		time;
 
@@ -92,25 +38,6 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 		set_sync(nb, i, philos);
 	}
 	return (1);
-}
-
-void	set_forks(int i, int nb, t_philo **philos, pthread_mutex_t **forks)
-{
-	if (i == 0 && nb == 1)
-	{
-		(*philos)[i].l_fork = (*forks);
-		(*philos)[i].r_fork = NULL;
-	}
-	if (i == 0)
-	{
-		(*philos)[i].l_fork = (*forks);
-		(*philos)[i].r_fork = (*forks) + (nb - 1);
-	}
-	else
-	{
-		(*philos)[i].l_fork = (*forks) + i;
-		(*philos)[i].r_fork = (*forks) + (i - 1);
-	}
 }
 
 int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
@@ -162,7 +89,6 @@ int	init_philos(char **av, int ac, t_philo **philos, pthread_mutex_t **forks)
 	}
 	return (1);
 }
-
 
 int	init_forks(char **av, pthread_mutex_t **forks)
 {

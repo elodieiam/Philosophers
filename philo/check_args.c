@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 15:06:51 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/04 18:12:01 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 11:29:54 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,21 +46,21 @@ int	check_is_number(int ac, char **av)
 
 	i = 1;
 	j = 0;
-		while (i < ac)
+	while (i < ac)
+	{
+		j = 0;
+		while (av[i][j])
 		{
-			j = 0;
-			while (av[i][j])
-			{
-				if (av[i][j] < '0' || av[i][j] > '9')
-					return (0);
-				j++;
-			}
-			i++;
+			if (av[i][j] < '0' || av[i][j] > '9')
+				return (0);
+			j++;
 		}
+		i++;
+	}
 	return (1);
 }
 
-int	check_zero (char *av)
+int	check_zero(char *av)
 {
 	int	i;
 
@@ -79,7 +79,7 @@ int	check_is_int(int ac, char **av)
 	int	i;
 
 	i = 1;
-	while (i < 	ac)
+	while (i < ac)
 	{
 		if (ft_atoi(av[i]) > 2147483647)
 			return (0);
@@ -88,13 +88,6 @@ int	check_is_int(int ac, char **av)
 	return (1);
 }
 
-/*Cette fonction vérifie qu'on a au moins un philo pour lancer la simulation 
-(si on en a 1 il meurt mais il faut pouvoir lancer le programme alors que si on a 
-0 philo on ne lance pas le programme)
-Elle vérifie aussi qu'on a un nombre correct d'arguments et qu'ils ne contiennent que des
-nombres (pas de signes négatifs acceptés)
-Et enfin que les valeurs passées en arguments ne dépassent pas la limite des int
-*/
 int	check_args(int ac, char **av)
 {
 	if (ac == 5 || ac == 6)
