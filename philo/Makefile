@@ -1,6 +1,6 @@
 CC = cc 
 NAME = philo
-CFLAGS = -Wall -Wextra -Werror -pthread -g3 
+CFLAGS = -Wall -Wextra -Werror
 
 #-fsanitize=address
 
@@ -21,7 +21,7 @@ all: $(NAME)
 	@$(CC) $(CFLAGS) -c $< -o $@
 	
 $(NAME): $(OBJ) philosophers.h
-	@$(CC) $(CFLAGS) $(OBJ) -o $@
+	@$(CC) $(CFLAGS) $(OBJ) -o $@ -lpthread
 	@echo "Making philo..."
 	@echo "Ready !"
 

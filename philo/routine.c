@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/11 13:34:41 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 16:25:34 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 20:58:22 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,21 +14,26 @@
 
 int	is_dead(t_philo *philo)
 {
-	long long	time;
-
-	time = get_time() - philo->last_meal;
-	if (time > philo->time_die)
+	if (get_time() - philo->last_meal > philo->time_die)
 	{
-		pthread_mutex_lock(philo->lock_philo);
+		if (pthread_mutex_lock(philo->check_dead))
+			return (write(2, "Error : mutex_lock issue\n", 25), 1);
 		if (!(*(philo->status)))
 		{
 			(*(philo->status)) = dead;
-			pthread_mutex_lock(philo->write);
+			if (pthread_mutex_lock(philo->write))
+			{
+				if (pthread_mutex_unlock(philo->check_dead))
+					return (write(2, "Error : mutex_unlock issue\n", 27), 1);
+				return (write(2, "Error : mutex_lock issue\n", 25), 1);
+			}
 			printf("%lld %d died\n", (get_time() - philo->time) \
 				/ 1000, philo->pos);
-			pthread_mutex_unlock(philo->write);
+			if (pthread_mutex_unlock(philo->write))
+				return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 		}
-		pthread_mutex_unlock(philo->lock_philo);
+		if (pthread_mutex_unlock(philo->check_dead))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 		return (1);
 	}
 	return (0);
@@ -45,15 +50,18 @@ int	are_fed(t_philo *philo)
 
 void	*case_one(t_philo *philo)
 {
-	pthread_mutex_lock(philo->l_fork);
+	if (pthread_mutex_lock(philo->l_fork))
+		return (write(2, "Error : mutex_lock issue\n", 25), NULL);
 	if (print_messages(philo, "has taken a fork"))
 	{
-		pthread_mutex_unlock(philo->l_fork);
+		if (pthread_mutex_unlock(philo->l_fork))
+			return (write(2, "Error : mutex_unlock issue\n", 27), NULL);
 		return (NULL);
 	}
-	usleep(philo->time_die + 500);
+	usleep(philo->time_die + 1000);
 	is_dead(philo);
-	pthread_mutex_unlock(philo->l_fork);
+	if (pthread_mutex_unlock(philo->l_fork))
+		return (write(2, "Error : mutex_unlock issue\n", 27), NULL);
 	return (NULL);
 }
 

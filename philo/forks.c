@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/05 11:32:52 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 16:25:00 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 20:25:33 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,19 @@
 int	pick_forks_even(t_philo *philo)
 {
 	if (pthread_mutex_lock((philo->l_fork)))
-		printf("error\n");
+		return (write(2, "Error : mutex_lock issue\n", 25), 1);
 	if (print_messages(philo, "has taken a fork"))
 	{
-		pthread_mutex_unlock((philo->l_fork));
+		if (pthread_mutex_unlock((philo->l_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 		return (1);
 	}
 	if (pthread_mutex_lock((philo->r_fork)))
-		printf("error\n");
+	{
+		if (pthread_mutex_unlock((philo->l_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
+		return (write(2, "Error : mutex_lock issue\n", 25), 1);
+	}
 	if (print_messages(philo, "has taken a fork"))
 	{
 		drop_forks(philo);
@@ -34,14 +39,19 @@ int	pick_forks_even(t_philo *philo)
 int	pick_forks_odd(t_philo *philo)
 {
 	if (pthread_mutex_lock((philo->r_fork)))
-		printf("error\n");
+		return (write(2, "Error : mutex_lock issue\n", 25), 1);
 	if (print_messages(philo, "has taken a fork"))
 	{
-		pthread_mutex_unlock((philo->r_fork));
+		if (pthread_mutex_unlock((philo->r_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 		return (1);
 	}
 	if (pthread_mutex_lock((philo->l_fork)))
-		printf("error\n");
+	{
+		if (pthread_mutex_unlock((philo->r_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
+		return (write(2, "Error : mutex_lock issue\n", 25), 1);
+	}
 	if (print_messages(philo, "has taken a fork"))
 	{
 		drop_forks(philo);
@@ -65,16 +75,21 @@ int	pick_forks(t_philo *philo)
 	return (0);
 }
 
-void	drop_forks(t_philo *philo)
+int	drop_forks(t_philo *philo)
 {
 	if (philo->pos % 2 == 0)
 	{
-		pthread_mutex_unlock((philo->r_fork));
-		pthread_mutex_unlock((philo->l_fork));
+		if (pthread_mutex_unlock((philo->r_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
+		if (pthread_mutex_unlock((philo->l_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 	}
 	else
 	{
-		pthread_mutex_unlock((philo->l_fork));
-		pthread_mutex_unlock((philo->r_fork));
+		if (pthread_mutex_unlock((philo->l_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
+		if (pthread_mutex_unlock((philo->r_fork)))
+			return (write(2, "Error : mutex_unlock issue\n", 27), 1);
 	}
+	return (0);
 }

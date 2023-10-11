@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/13 10:58:02 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 12:04:31 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 20:48:19 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ typedef struct s_philo
 	pthread_t		thread_id;
 	pthread_mutex_t	*l_fork;
 	pthread_mutex_t	*r_fork;
-	pthread_mutex_t	*lock_philo;
+	pthread_mutex_t	*check_dead;
 	pthread_mutex_t	*write;
 	int				pos;
 	int				nb_philo;
@@ -60,7 +60,7 @@ int			check_args(int ac, char **av);
 int			pick_forks_even(t_philo *philo);
 int			pick_forks_odd(t_philo *philo);
 int			pick_forks(t_philo *philo);
-void		drop_forks(t_philo *philo);
+int			drop_forks(t_philo *philo);
 
 //init_utils.c
 void		set_common_vars(char **av, int i, t_philo **philos);

@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/18 21:16:57 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 12:00:03 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 20:48:19 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,22 +43,23 @@ int	init_data_philos(char **av, int ac, t_philo **philos)
 int	init_mutex_philos(int nb, t_philo **philos, pthread_mutex_t **forks)
 {
 	int						i;
-	static pthread_mutex_t	lock_philo;
-	static pthread_mutex_t	write;
+	static pthread_mutex_t	check_dead;
+	static pthread_mutex_t	writing;
 
 	i = 0;
-	if (pthread_mutex_init(&lock_philo, NULL) != 0)
-		return (0);
-	if (pthread_mutex_init(&write, NULL) != 0)
+	if (pthread_mutex_init(&check_dead, NULL) != 0)
+		return (write(2, "Error : mutex_init issue\n", 25), 0);
+	if (pthread_mutex_init(&writing, NULL) != 0)
 	{
-		pthread_mutex_destroy(&lock_philo);
-		return (0);
+		if (pthread_mutex_destroy(&check_dead))
+			return (write(2, "Error : mutex_destroy issue\n", 28), 0);
+		return (write(2, "Error : mutex_init issue\n", 25), 0);
 	}
 	while (i < nb)
 	{
 		set_forks(i, nb, philos, forks);
-		(*philos)[i].lock_philo = &lock_philo;
-		(*philos)[i].write = &write;
+		(*philos)[i].check_dead = &check_dead;
+		(*philos)[i].write = &writing;
 		i++;
 	}
 	return (1);
@@ -81,8 +82,10 @@ int	init_philos(char **av, int ac, t_philo **philos, pthread_mutex_t **forks)
 		free_mutex(av, forks);
 		while (i < nb)
 		{
-			pthread_mutex_destroy((*philos)[i].lock_philo);
-			pthread_mutex_destroy((*philos)[i].write);
+			if (pthread_mutex_destroy((*philos)[i].check_dead))
+				return (write(2, "Error : mutex_destroy issue\n", 28), 0);
+			if (pthread_mutex_destroy((*philos)[i].write))
+				return (write(2, "Error : mutex_destroy issue\n", 28), 0);
 			i++;
 		}
 		return (0);
@@ -108,11 +111,11 @@ int	init_forks(char **av, pthread_mutex_t **forks)
 		{
 			while (j < i)
 			{
-				pthread_mutex_destroy(&((*forks)[j]));
+				if (pthread_mutex_destroy(&((*forks)[j])))
+					return (write(2, "Error : mutex_destroy issue\n", 28), 0);
 				j++;
 			}
-			free (*forks);
-			return (0);
+			return (write(2, "Error : mutex_init\n", 19), free (*forks), 0);
 		}
 		i++;
 	}

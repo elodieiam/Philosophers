@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/05 11:45:30 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 16:25:25 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 20:32:53 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ void	join_threads(t_philo *philos, int nb)
 	while (i < nb)
 	{
 		if (pthread_join((philos[i]).thread_id, NULL) != 0)
-			printf("Error : pthread_join issue.\n");
+			write(2, "Error : pthread_join issue.\n", 28);
 		i++;
 	}
 }
@@ -38,11 +38,11 @@ int	init_threads(t_philo *philos)
 		routine, (void *)(&philos[i])))
 		{
 			*(philos->init_check) = 1;
-			printf("Error : pthread_create failed\n");
+			write(2, "Error : pthread_create failed\n", 30);
 			while (--i >= 0)
 			{
 				if (pthread_join(philos[i].thread_id, NULL) != 0)
-					printf("Error : pthread_join failed\n");
+					write(2, "Error : pthread_join issue.\n", 28);
 			}
 			return (0);
 		}

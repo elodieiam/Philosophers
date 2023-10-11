@@ -6,7 +6,7 @@
 /*   By: elrichar <elrichar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/05 11:35:27 by elrichar          #+#    #+#             */
-/*   Updated: 2023/10/05 16:25:48 by elrichar         ###   ########.fr       */
+/*   Updated: 2023/10/05 18:53:43 by elrichar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ int	eat(t_philo *philo)
 		drop_forks(philo);
 		return (1);
 	}
-	drop_forks(philo);
+	if (drop_forks(philo))
+		return (1);
 	return (0);
 }
