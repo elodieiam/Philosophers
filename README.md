@@ -2,7 +2,7 @@
 The Philosophers project at 42 School involves **simulating the classic dining philosophers** problem to explore concepts in concurrency and synchronization. 🧠
 
 The program is designed to demonstrate how philosophers (represented as threads) behave when sharing resources (forks). 
-The main goal is to **understand and manage synchronization issues**, such as **avoiding deadlocks** and ensuring that all philosophers get a chance to eat.
+The main goal is to **understand and manage synchronization issues**, such as **avoiding deadlocks and data races**, as well as ensuring that all philosophers get a chance to eat.
 
 This project enhances our understanding of thread management, synchronization techniques, and concurrent programming.
 
